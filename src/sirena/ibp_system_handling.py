@@ -1,8 +1,8 @@
 import random
 import sympy as sp
 from numba import njit
-import ibp_solver
-import ibp_solver_num
+from . import ibp_solver
+from . import ibp_solver_num
 
 # region Complexity sorting
 
