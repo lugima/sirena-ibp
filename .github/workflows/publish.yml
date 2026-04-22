@@ -40,9 +40,14 @@ jobs:
             # Build FLINT
             git clone https://github.com/flintlib/flint.git;
             cd flint;
-            ./configure;
+            ./configure -enable-shared --disable-static;
             make -j$(nproc);
             make install;
+            ldconfig;
+
+            echo "=== Checking FLINT install ===";
+            ls -R /usr/local/lib | grep flint || true;
+            
             cd ..;
 
             # Build ARB
@@ -51,6 +56,7 @@ jobs:
             ./configure;
             make -j$(nproc);
             make install;
+            ldconfig;
             cd ..;
 
           CIBW_BEFORE_ALL_MACOS: brew install flint

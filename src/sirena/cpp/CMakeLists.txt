@@ -9,7 +9,12 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_PREFIX_PATH "/usr/local" ${CMAKE_PREFIX_PATH})
 
 # Find system libreries (FLINT y GMP)
-find_library(FLINT_LIB NAMES flint REQUIRED)
+find_library(FLINT_LIB 
+    NAMES flint 
+    HINTS /usr/local/lib /usr/local/lib64
+    PATH_SUFFIXES lib
+    REQUIRED
+)
 find_library(GMP_LIB NAMES gmp REQUIRED)
 
 find_path(FLINT_INCLUDE_DIR 
