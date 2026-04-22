@@ -28,9 +28,11 @@ jobs:
         uses: pypa/cibuildwheel@v2.17.0
         env:
 
+          CIBW_MANYLINUX_X86_64_IMAGE: manylinux_2_28
+
           CIBW_BEFORE_ALL_LINUX: >
-            yum install -y flint-devel arb-devel || 
-            apt-get install -y libflint-dev libarb-dev
+            yum install -y epel-release &&
+            yum install -y flint-devel arb-devel gmp-devel
 
           CIBW_ARCHS_MACOS: "x86_64 arm64 universal2"
           
