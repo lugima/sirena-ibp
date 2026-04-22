@@ -41,7 +41,7 @@ jobs:
             dnf install -y git gcc gcc-c++ make gmp-devel mpfr-devel autoconf automake libtool;
 
             dnf install -y mercurial;
-            hg clone https://gmplib.org/repo/gmp/ gmp
+            hg clone https://gmplib.org/repo/gmp/ gmp;
             cd gmp;
             ./.bootstrap;
             ./configure --prefix=/usr/local --enable-cxx;
