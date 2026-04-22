@@ -51,6 +51,7 @@ jobs:
             ./configure;
             make -j$(nproc);
             make install;
+            cd ..;
 
           CIBW_BEFORE_ALL_MACOS: brew install flint
           CIBW_ARCHS_MACOS: "x86_64 arm64"

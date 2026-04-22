@@ -6,6 +6,7 @@ find_package(pybind11 CONFIG REQUIRED)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_PREFIX_PATH "/usr/local" ${CMAKE_PREFIX_PATH})
 
 # Find system libreries (FLINT y GMP)
 find_library(FLINT_LIB NAMES flint REQUIRED)
