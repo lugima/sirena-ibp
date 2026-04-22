@@ -1,7 +1,9 @@
-name: Build and Publish to TestPyPI
+name: Build and Publish
 
 on:
   push:
+    branches: [ main ]
+  pull_request:
     branches: [ main ]
 
 jobs:
@@ -13,28 +15,45 @@ jobs:
         os: [ubuntu-latest, macos-latest]
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+      
+      - name: Install FLINT/ARB (macOS)
+        if: runner.os == 'macOS'
+        run: brew install flint arb
 
       - name: Build wheels
         uses: pypa/cibuildwheel@v2.17.0
         env:
-          CIBW_ARCHS_MACOS: "x86_64 arm64 universal2"
-          CIBW_SKIP: "cp36-* cp37-* cp38-* pp*"
 
-      - uses: actions/upload-artifact@v4
+          CIBW_BEFORE_ALL_LINUX: >
+            yum install -y flint-devel arb-devel || 
+            apt-get install -y libflint-dev libarb-dev
+
+          CIBW_ARCHS_MACOS: "x86_64 arm64 universal2"
+          
+          CIBW_SKIP: "cp36-* cp37-* cp38-* cp39-* pp*"
+          
+          CIBW_BUILD_FRONTEND: "build"
+
+      - name: Store artifacts
+        uses: actions/upload-artifact@v4
         with:
           name: cibw-wheels-${{ matrix.os }}-${{ strategy.job-index }}
           path: ./wheelhouse/*.whl
 
   publish:
-    name: Publish to TestPyPI
+    name: Upload to TestPyPI
     needs: [build_wheels]
     runs-on: ubuntu-latest
     permissions:
       id-token: write
-
+    
     steps:
-      - uses: actions/download-artifact@v4
+      - name: Download all wheels
+        uses: actions/download-artifact@v4
         with:
           pattern: cibw-wheels-*
           path: dist
@@ -44,3 +63,4 @@ jobs:
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           repository-url: https://test.pypi.org/legacy/
+          skip-existing: true

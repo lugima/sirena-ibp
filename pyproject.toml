@@ -1,17 +1,10 @@
 [build-system]
-requires = ["scikit-build-core", "pybind11"]
+requires = ["scikit-build-core>=0.5.0", "pybind11>=2.12"]
 build-backend = "scikit_build_core.build"
-
-[tool.scikit-build]
-cmake.version = ">=3.15"
-cmake.source-dir = "src/sirena/cpp"
-
-[tool.scikit-build.wheel]
-packages = ["src/sirena"]
 
 [project]
 name = "sirena-ibp"
-version = "0.1.0"
+version = "0.1.1"
 description = "Sum-Integral REductioN Algorithm"
 authors = [
     { name="Luis Gil", email="lgil@ugr.es"},
@@ -26,6 +19,14 @@ dependencies = [
     "numba",
     "python-flint"
 ]
+
+[tool.scikit-build]
+cmake.version = ">=3.15"
+cmake.source-dir = "src/sirena/cpp"
+cmake.verbose = true
+
+[tool.scikit-build.wheel]
+packages = ["src/sirena"]
 
 [project.scripts]
 sirena = "sirena.main:main"
