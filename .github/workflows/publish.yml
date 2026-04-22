@@ -34,7 +34,7 @@ jobs:
             yum install -y epel-release &&
             yum install -y flint-devel arb-devel gmp-devel
 
-          CIBW_ARCHS_MACOS: "x86_64 arm64 universal2"
+          CIBW_ARCHS_MACOS: "x86_64 arm64"
           
           CIBW_SKIP: "cp36-* cp37-* cp38-* cp39-* pp*"
           
