@@ -40,14 +40,17 @@ jobs:
             # Build FLINT
             git clone https://github.com/flintlib/flint.git;
             cd flint;
-            ./configure -enable-shared --disable-static;
+            ./configure --prefix=/usr -enable-shared --disable-static;
             make -j$(nproc);
             make install;
             ldconfig;
 
-            echo "=== Checking FLINT install ===";
-            ls -R /usr/local/lib | grep flint || true;
-            
+            echo "=== WHERE IS FLINT ===";
+            find / -name "libflint*" 2>/dev/null || true;
+
+            echo "=== CONFIG.LOG ===";
+            cat flint/config.log | tail -n 50 || true;
+
             cd ..;
 
             # Build ARB
