@@ -40,10 +40,21 @@ jobs:
 
             dnf install -y git gcc gcc-c++ make gmp-devel mpfr-devel autoconf automake libtool;
 
+            git clone https://gmplib.org/repo/gmp.git;
+            cd gmp;
+            ./bootstrap;
+            ./configure --prefix=/usr/local --enable-cxx;
+            make -j$(nproc);
+            make install;
+            cd ..;
+
+            export LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH;
+            export PKG_CONFIG_PATH=/usr/local/lib/pkgconfig;
+
             git clone https://github.com/flintlib/flint.git;
             cd flint;
             ./bootstrap.sh;
-            ./configure --prefix=/usr/local --enable-shared --disable-static;
+            ./configure --prefix=/usr/local --with-gmp=/usr/local --enable-shared --disable-static;
             make -j$(nproc);
             make install;
             ldconfig;
