@@ -20,11 +20,10 @@ find_path(FLINT_INCLUDE_DIR
           REQUIRED
 )
 
-set(BASE_CPP_DIR "${CMAKE_CURRENT_SOURCE_DIR}/src/sirena/cpp")
 # ==========================================
 # 1. Module: ibp_solver
 # ==========================================
-pybind11_add_module(ibp_solver "${BASE_CPP_DIR}/src/ibp_solver.cpp")
+pybind11_add_module(ibp_solver "src/ibp_solver.cpp")
 
 # Equivalent to -std=c++14 -O3 -Wall -lflint -lgmp
 target_compile_features(ibp_solver PRIVATE cxx_std_14)
@@ -32,14 +31,14 @@ target_compile_options(ibp_solver PRIVATE -Wall -O3)
 target_link_libraries(ibp_solver PRIVATE ${FLINT_LIB} ${GMP_LIB})
 
 target_include_directories(ibp_solver PRIVATE 
-    "${BASE_CPP_DIR}/includes"
+    "includes"
     ${FLINT_INCLUDE_DIR}
 )
 
 # ==========================================
 # 2. Module: ibp_solver_num
 # ==========================================
-pybind11_add_module(ibp_solver_num "${BASE_CPP_DIR}/src/ibp_solver_num.cpp")
+pybind11_add_module(ibp_solver_num src/ibp_solver_num.cpp)
 
 # Equivalent to -std=c++14 -O3 -Wall -lgmp
 target_compile_features(ibp_solver_num PRIVATE cxx_std_14)
@@ -47,7 +46,7 @@ target_compile_options(ibp_solver_num PRIVATE -Wall -O3)
 target_link_libraries(ibp_solver_num PRIVATE ${GMP_LIB})
 
 target_include_directories(ibp_solver_num PRIVATE 
-    "${BASE_CPP_DIR}/includes"
+    "includes"
 )
 
 
