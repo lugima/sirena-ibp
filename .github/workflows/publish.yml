@@ -40,7 +40,7 @@ jobs:
 
             dnf install -y git gcc gcc-c++ make gmp-devel mpfr-devel autoconf automake libtool;
 
-            git clone https://gmplib.org/repo/gmp.git;
+            git clone https://github.com/gmplib/gmp.git;
             cd gmp;
             ./bootstrap;
             ./configure --prefix=/usr/local --enable-cxx;
