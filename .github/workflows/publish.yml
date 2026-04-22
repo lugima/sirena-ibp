@@ -33,7 +33,9 @@ jobs:
           CIBW_BEFORE_ALL_LINUX: >
             yum install -y epel-release dnf-plugins-core &&
             yum config-manager --set-enabled powertools &&
-            yum install -y flint-devel arb-devel gmp-devel
+            dnf install -y /usr/bin/crb && crb enable &&
+            dnf clean all && dnf makecache &&
+            dnf install -y flint-devel arb-devel gmp-devel
 
           CIBW_ARCHS_MACOS: "x86_64 arm64"
           
