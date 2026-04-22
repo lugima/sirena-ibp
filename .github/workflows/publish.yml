@@ -39,9 +39,15 @@ jobs:
             crb enable || true;
 
             dnf install -y \
-            git gcc gcc-c++ make \
-            gmp-devel mpfr-devel \
-            autoconf automake libtool;
+            git \
+            gcc \
+            gcc-c++ \
+            make \
+            gmp-devel \
+            mpfr-devel \
+            autoconf \
+            automake \
+            libtool;
 
             git clone https://github.com/flintlib/flint.git;
             cd flint;
