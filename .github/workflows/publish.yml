@@ -25,18 +25,15 @@ jobs:
         run: brew install flint
 
       - name: Build wheels
-        uses: pypa/cibuildwheel@v2.17.0
+        uses: pypa/cibuildwheel@v2.21.3
         env:
 
           CIBW_MANYLINUX_X86_64_IMAGE: manylinux_2_28
 
           CIBW_BEFORE_ALL_LINUX: >
-            yum install -y epel-release dnf-plugins-core &&
-            yum config-manager --set-enabled powertools &&
-            dnf install -y /usr/bin/crb && crb enable &&
-            dnf clean all && dnf makecache &&
-            dnf install -y flint-devel arb-devel gmp-devel
+            apt-get update && apt-get install -y libflint-dev libgmp-dev libarb-dev
 
+          CIBW_BEFORE_ALL_MACOS: brew install flint
           CIBW_ARCHS_MACOS: "x86_64 arm64"
           
           CIBW_SKIP: "cp36-* cp37-* cp38-* cp39-* pp*"
