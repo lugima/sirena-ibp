@@ -30,16 +30,22 @@ jobs:
 
           MACOSX_DEPLOYMENT_TARGET: "15.0"
 
-          CIBW_MANYLINUX_X86_64_IMAGE: manylinux_2_28
+          CIBW_MANYLINUX_X86_64_IMAGE: manylinux2014
 
           CIBW_BEFORE_ALL_LINUX: >
-            apt-get update && apt-get install -y libflint-dev libgmp-dev libarb-dev
+            if command -v apt-get >/dev/null; then
+              apt-get update && apt-get install -y libflint-dev libgmp-dev libarb-dev;
+            else
+              yum install -y epel-release && 
+              yum config-manager --set-enabled powertools || yum-config-manager --enable powertools;
+              yum install -y flint-devel arb-devel gmp-devel;
+            fi
 
           CIBW_BEFORE_ALL_MACOS: brew install flint
           CIBW_ARCHS_MACOS: "x86_64 arm64"
           
           CIBW_SKIP: "cp36-* cp37-* cp38-* cp39-* pp*"
-          
+          CIBW_ENVIRONMENT: CMAKE_SOURCE_DIR="src/sirena/cpp"
           CIBW_BUILD_FRONTEND: "build"
 
       - name: Store artifacts
