@@ -30,15 +30,16 @@ jobs:
 
           MACOSX_DEPLOYMENT_TARGET: "15.0"
 
-          CIBW_MANYLINUX_X86_64_IMAGE: manylinux2014
+          CIBW_MANYLINUX_X86_64_IMAGE: manylinux_2_28
 
           CIBW_BEFORE_ALL_LINUX: >
-            if command -v apt-get >/dev/null; then
-              apt-get update && apt-get install -y libflint-dev libgmp-dev libarb-dev;
+            if command -v dnf >/dev/null; then
+              dnf install -y epel-release;
+              dnf config-manager --set-enabled crb;
+              dnf install -y flint-devel arb-devel gmp-devel;
             else
-              yum install -y epel-release && 
-              yum config-manager --set-enabled powertools || yum-config-manager --enable powertools;
-              yum install -y flint-devel arb-devel gmp-devel;
+              echo "Unsupported Linux base image";
+              exit 1;
             fi
 
           CIBW_BEFORE_ALL_MACOS: brew install flint
