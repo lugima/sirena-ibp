@@ -33,34 +33,25 @@ jobs:
           CIBW_MANYLINUX_X86_64_IMAGE: manylinux_2_28
 
           CIBW_BEFORE_ALL_LINUX: >
+            set -eux;
+
             dnf install -y epel-release;
             crb enable || true;
-            dnf install -y gmp-devel gcc gcc-c++ make;
+            dnf install -y git gcc gcc-c++ make gmp-devel mpfr-devel;
 
-            # Build FLINT
             git clone https://github.com/flintlib/flint.git;
             cd flint;
-            ./configure --prefix=/usr -enable-shared --disable-static;
-            make -j$(nproc);
+
+            ./configure --prefix=/usr --enable-shared --disable-static;
+
+            make -j$(nproc) V=1;
+
             make install;
+
             ldconfig;
 
-            echo "=== WHERE IS FLINT ===";
-            find / -name "libflint*" 2>/dev/null || true;
-
-            echo "=== CONFIG.LOG ===";
-            cat flint/config.log | tail -n 50 || true;
-
-            cd ..;
-
-            # Build ARB
-            git clone https://github.com/fredrik-johansson/arb.git;
-            cd arb;
-            ./configure;
-            make -j$(nproc);
-            make install;
-            ldconfig;
-            cd ..;
+            echo "=== CHECK INSTALL ===";
+            find /usr -name "libflint*" || true;
 
           CIBW_BEFORE_ALL_MACOS: brew install flint
           CIBW_ARCHS_MACOS: "x86_64 arm64"
