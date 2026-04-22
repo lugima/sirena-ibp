@@ -7,6 +7,8 @@ find_package(pybind11 CONFIG REQUIRED)
 # Find system libreriees (FLINT y GMP)
 find_library(FLINT_LIB NAMES flint REQUIRED)
 find_library(GMP_LIB NAMES gmp REQUIRED)
+find_path(FLINT_INCLUDE_DIR NAMES flint/flint.h 
+          PATHS /usr/local/include /opt/homebrew/include)
 
 # ==========================================
 # 1. Module: ibp_solver
