@@ -4,12 +4,21 @@ project(cpp_modules LANGUAGES CXX)
 # Find pybind11 (scikit-build-core provides it)
 find_package(pybind11 CONFIG REQUIRED)
 
-# Find system libreriees (FLINT y GMP)
+# Find system libreries (FLINT y GMP)
 find_library(FLINT_LIB NAMES flint REQUIRED)
 find_library(GMP_LIB NAMES gmp REQUIRED)
-find_path(FLINT_INCLUDE_DIR NAMES flint/flint.h 
-          PATHS /usr/local/include /opt/homebrew/include)
 
+find_path(FLINT_INCLUDE_DIR 
+          NAMES flint/flint.h 
+          PATHS 
+          /usr/local/include 
+          /opt/homebrew/include
+          /usr/include
+          REQUIRED
+)
+
+set(CPP_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/src/sirena/cpp/src")
+set(INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/src/sirena/cpp/includes")
 # ==========================================
 # 1. Module: ibp_solver
 # ==========================================
@@ -21,7 +30,8 @@ target_compile_options(ibp_solver PRIVATE -Wall -O3)
 target_link_libraries(ibp_solver PRIVATE ${FLINT_LIB} ${GMP_LIB})
 
 target_include_directories(ibp_solver PRIVATE 
-    ${CMAKE_CURRENT_SOURCE_DIR}/includes 
+    ${INCLUDE_DIR}
+    ${FLINT_INCLUDE_DIR} 
 )
 
 # ==========================================
@@ -35,7 +45,7 @@ target_compile_options(ibp_solver_num PRIVATE -Wall -O3)
 target_link_libraries(ibp_solver_num PRIVATE ${GMP_LIB})
 
 target_include_directories(ibp_solver_num PRIVATE 
-    ${CMAKE_CURRENT_SOURCE_DIR}/includes 
+    ${INCLUDE_DIR}
 )
 
 
