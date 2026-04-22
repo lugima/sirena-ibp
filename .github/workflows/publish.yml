@@ -39,11 +39,10 @@ jobs:
             crb enable || true;
 
             dnf install -y \
-              git gcc gcc-c++ make \
-              gmp-devel mpfr-devel \
-              autoconf automake libtool;
+            git gcc gcc-c++ make \
+            gmp-devel mpfr-devel \
+            autoconf automake libtool;
 
-            # FLINT
             git clone https://github.com/flintlib/flint.git;
             cd flint;
             ./bootstrap.sh;
@@ -53,7 +52,6 @@ jobs:
             ldconfig;
             cd ..;
 
-            # ARB
             git clone https://github.com/fredrik-johansson/arb.git;
             cd arb;
             ./configure --prefix=/usr/local;
