@@ -58,4 +58,4 @@ If you use SIRENA please cite: [\[arXiv:X\]](https://arxiv.org/abs/X).
 ## Acknowledgments
 
 We thank Mikael Chala for sparking this project, and for his continued support during its development. We are also indebted to Pablo Navarrete for useful discussions, and to York Schröder and Philipp Schicho
-for providing useful cross-checks with their own private implementations of an IBP reduction algorithm.
+for providing useful cross-checks with their own private implementations of an IBP reduction algorithm. 
