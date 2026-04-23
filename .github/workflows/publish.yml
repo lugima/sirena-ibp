@@ -16,7 +16,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@main
         with:
           submodules: true
       
@@ -30,6 +30,7 @@ jobs:
 
           CIBW_PRERELEASE_PYTHONS: True
           CIBW_BUILD: "cp310-* cp311-* cp312-* cp313-* cp314-*"
+          CIBW_FREE_THREADED_SUPPORT: True
 
           MACOSX_DEPLOYMENT_TARGET: "15.0"
 
