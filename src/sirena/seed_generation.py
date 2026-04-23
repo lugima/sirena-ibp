@@ -45,18 +45,17 @@ def _generate_seeds_internal(loop_num: int, fer: bool, max_r: int, max_s: int, a
     den_combinations = loop_num * (loop_num + 1) // 2
 
     # Propagator powers
-    alpha_list = [t for r in range(loop_num, max_r+1) 
-                 for t in itertools.product(range(alpha_ini, r+1), repeat=den_combinations)
-                 if sum(t) == r
-                 ]
+    alpha_list = [a for a in itertools.product(range(alpha_ini, max_r-alpha_ini+1), repeat=den_combinations)
+                  if sum(a) <= max_r and sum(neg for neg in a if neg<0) >= alpha_ini
+                  ]
+
     if alpha_ini < 0:
-        # Only one negative powered propagator, if any
+        # Keep seeds with sum of negative powers equal to or greater than alpha_ini
         alpha_list = [a for a in alpha_list if sum(neg for neg in a if neg<0) >= alpha_ini]
 
     # Numerator powers
-    beta_list = [t for s in range(0, max_s+1) 
-                 for t in itertools.product(range(s+1), repeat=den_combinations)
-                 if sum(t) == s
+    beta_list = [t for t in itertools.product(range(max_s+1), repeat=den_combinations)
+                 if sum(t) <= max_s
                  ]
     
     if not fer:
@@ -68,11 +67,10 @@ def _generate_seeds_internal(loop_num: int, fer: bool, max_r: int, max_s: int, a
                     for beta in beta_list)
     
     # Keep only seeds of specified mass dimension(s)
-    filtered_seeds = tuple([sint for sint in seeds 
-                      if 4 * loop_num - 2 * sum(list(sint[0])) + sum(list(sint[1])) in mass_dim])
+    filtered_seeds = tuple(sint for sint in seeds 
+                      if 4 * loop_num - 2 * sum(list(sint[0])) + sum(list(sint[1])) in mass_dim)
 
     return filtered_seeds
-
 
 def generate_seeds(loop_num: int, fer: bool, max_r: int, max_s: int, alpha_ini: int, sig_order: str, mass_dim: set, n_cpus) -> list:
     """ Returns list of seed sum-integrals at given:
