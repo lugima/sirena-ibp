@@ -43,22 +43,35 @@ jobs:
             export LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH;
             export PKG_CONFIG_PATH=/usr/local/lib/pkgconfig;
 
-            wget https://ftp.gnu.org/gnu/gmp/gmp-6.2.1.tar.xz;
-            tar -xf gmp-6.2.1.tar.xz;
-            cd gmp-6.2.1;
-            ./configure --with-pic --prefix=/usr/local --disable-static --enable-shared;
-            make -j$(nproc);
-            make install;
-            cd ..;
+            GMP_VER=$(pkg-config --modversion gmp || echo "0");
+            echo "Detected GMP: $GMP_VER";
 
-            wget https://www.mpfr.org/mpfr-4.2.1/mpfr-4.2.1.tar.xz;
-            tar -xf mpfr-4.2.1.tar.xz;
-            cd mpfr-4.2.1;
-            ./configure --prefix=/usr/local --with-gmp=/usr/local;
-            make -j$(nproc);
-            make install;
-            ldconfig;
-            cd ..;
+            if [ "$(printf '%s\n' "6.2.1" "$GMP_VER" | sort -V | head -n1)" != "6.2.1" ]; then
+              echo "Installing newer GMP...";
+              wget https://ftp.gnu.org/gnu/gmp/gmp-6.2.1.tar.xz;
+              tar -xf gmp-6.2.1.tar.xz;
+              cd gmp-6.2.1;
+              ./configure --prefix=/usr/local --enable-cxx --enable-shared --disable-static;
+              make -j$(nproc);
+              make install;
+              ldconfig;
+              cd ..;
+            fi
+            
+            MPFR_VER=$(pkg-config --modversion mpfr || echo "0");
+            echo "Detected MPFR: $MPFR_VER";
+
+            if [ "$(printf '%s\n' "4.2.1" "$MPFR_VER" | sort -V | head -n1)" != "4.2.1" ]; then
+              echo "Installing newer MPFR...";
+              wget https://www.mpfr.org/mpfr-4.2.1/mpfr-4.2.1.tar.xz;
+              tar -xf mpfr-4.2.1.tar.xz;
+              cd mpfr-4.2.1;
+              ./configure --prefix=/usr/local --with-gmp=/usr/local;
+              make -j$(nproc);
+              make install;
+              ldconfig;
+              cd ..;
+            fi
 
             git clone https://github.com/flintlib/flint.git;
             cd flint;
@@ -68,13 +81,6 @@ jobs:
             make install;
             ldconfig;
             cd ..;
-
-            git clone https://github.com/fredrik-johansson/arb.git;
-            cd arb;
-            ./configure --prefix=/usr/local;
-            make -j$(nproc);
-            make install;
-            ldconfig;
 
           CIBW_BEFORE_ALL_MACOS: brew install flint
           CIBW_ARCHS_MACOS: "x86_64 arm64"
