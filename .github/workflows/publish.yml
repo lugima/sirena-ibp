@@ -30,7 +30,7 @@ jobs:
 
           MACOSX_DEPLOYMENT_TARGET: "15.0"
 
-          CIBW_MANYLINUX_X86_64_IMAGE: quay.io/pypa/manylinux_2_34_x86_64
+          CIBW_MANYLINUX_X86_64_IMAGE: manylinux_2_28
 
           CIBW_BEFORE_ALL_LINUX: >
             set -eux;
@@ -38,19 +38,18 @@ jobs:
             dnf install -y epel-release;
             crb enable || true;
 
-            dnf install -y git gcc gcc-c++ make gmp-devel mpfr-devel autoconf automake libtool;
+            dnf install -y wget m4 xz git gcc gcc-c++ make gmp-devel mpfr-devel autoconf automake libtool;
 
             export LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH;
             export PKG_CONFIG_PATH=/usr/local/lib/pkgconfig;
 
-            echo "=== GMP locations ===";
-            find /usr -name "libgmp.so*" 2>/dev/null;
-
-            echo "=== ldconfig ===";
-            ldconfig -p | grep gmp;
-
-            echo "=== pkg-config ===";
-            pkg-config --modversion gmp || true;
+            wget https://ftp.gnu.org/gnu/gmp/gmp-6.2.1.tar.xz;
+            tar -xf gmp-6.2.1.tar.xz;
+            cd gmp-6.2.1;
+            ./configure --with-pic --prefix=/usr/local --disable-static --enable-shared;
+            make -j$(nproc);
+            make install;
+            cd ..;
 
             git clone https://github.com/flintlib/flint.git;
             cd flint;
