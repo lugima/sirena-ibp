@@ -1,0 +1,7 @@
+max_r = 6
+max_s = 6
+alpha_ini = 0
+sig_order = "inverse"
+
+n_cpus = ["auto", 1]
+to_wolfram = False

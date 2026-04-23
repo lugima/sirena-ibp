@@ -4,6 +4,7 @@ import sys
 from .in_out_utils import get_max_r_s, sints_from_txt, params_from_txt, sints_to_txt
 from .reduction import sirena
 import logging
+from importlib import resources
 
 def args_main():
 
@@ -29,17 +30,19 @@ def args_main():
 
 def run_demo():
 
-    input_dir = "inputs/fermion_test.txt"
-    sints_in, coeffs_in, priority = sints_from_txt(input_dir)
+    with resources.path("sirena.examples", "fermion_test.txt") as path:
 
-    sints_in = sints_in[:4]
+        input_dir = path
+        sints_in, coeffs_in, priority = sints_from_txt(input_dir)
 
-    logging.info("Reducing the following two-loop fermionic sum-integrals:\n")
-    for sint in sints_in:
-        logging.info(f"{sint}\n")
+        sints_in = sints_in[:4]
 
-    time.sleep(1.5)
-    sols = sirena(sints_in, basis_sints=priority)
+        logging.info("Reducing the following two-loop fermionic sum-integrals:\n")
+        for sint in sints_in:
+            logging.info(f"{sint}\n")
+
+        time.sleep(1.5)
+        sols = sirena(sints_in, basis_sints=priority)
 
 def main():
 
