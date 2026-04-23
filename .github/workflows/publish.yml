@@ -28,6 +28,9 @@ jobs:
         uses: pypa/cibuildwheel@v2.21.3
         env:
 
+          CIBW_PRERELEASE_PYTHONS: True
+          CIBW_BUILD: "cp310-* cp311-* cp312-* cp313-* cp314-*"
+
           MACOSX_DEPLOYMENT_TARGET: "15.0"
 
           CIBW_MANYLINUX_X86_64_IMAGE: manylinux_2_28
