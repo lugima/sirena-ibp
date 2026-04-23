@@ -94,7 +94,7 @@ jobs:
           CIBW_BEFORE_ALL_MACOS: brew install flint
           CIBW_ARCHS_MACOS: "x86_64 arm64"
           
-          CIBW_SKIP: "cp36-* cp37-* cp38-* cp39-* pp* *-manylinux_i686"
+          CIBW_SKIP: "cp36-* cp37-* cp38-* cp39-* pp* *-manylinux_i686 *musllinux*"
           CIBW_ENVIRONMENT: CMAKE_SOURCE_DIR="src/sirena/cpp"
           CIBW_BUILD_FRONTEND: "build"
 
