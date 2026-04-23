@@ -51,6 +51,15 @@ jobs:
             make install;
             cd ..;
 
+            wget https://www.mpfr.org/mpfr-4.2.1/mpfr-4.2.1.tar.xz;
+            tar -xf mpfr-4.2.1.tar.xz;
+            cd mpfr-4.2.1;
+            ./configure --prefix=/usr/local --with-gmp=/usr/local;
+            make -j$(nproc);
+            make install;
+            ldconfig;
+            cd ..;
+
             git clone https://github.com/flintlib/flint.git;
             cd flint;
             ./bootstrap.sh;
