@@ -43,14 +43,14 @@ jobs:
             export LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH;
             export PKG_CONFIG_PATH=/usr/local/lib/pkgconfig;
 
-            dnf install -y wget m4 xz gcc-c++ make;
-            wget https://gmplib.org/download/gmp/gmp-6.2.1.tar.xz;
-            tar -xf gmp-6.2.1.tar.xz;
-            cd gmp-6.2.1;
-            ./configure --with-pic --prefix=/usr/local --disable-static --enable-shared;
-            make -j$(nproc);
-            make install;
-            cd ..;
+            echo "=== GMP locations ===";
+            find /usr -name "libgmp.so*" 2>/dev/null;
+
+            echo "=== ldconfig ===";
+            ldconfig -p | grep gmp;
+
+            echo "=== pkg-config ===";
+            pkg-config --modversion gmp || true;
 
             git clone https://github.com/flintlib/flint.git;
             cd flint;
