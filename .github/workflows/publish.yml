@@ -36,10 +36,18 @@ jobs:
           CIBW_BEFORE_ALL_LINUX: >
             set -eux;
 
-            dnf install -y epel-release;
-            crb enable || true;
+            if command -v dnf; then
+                dnf install -y epel-release wget m4 xz git gcc gcc-c++ make gmp-devel mpfr-devel autoconf automake libtool;
+            elif command -v yum; then
+                yum install -y epel-release wget m4 xz git gcc gcc-c++ make gmp-devel mpfr-devel autoconf automake libtool;
+            elif command -v microdnf; then
+                microdnf install -y epel-release wget m4 xz git gcc gcc-c++ make gmp-devel mpfr-devel autoconf automake libtool;
+            else
+                echo "No package manager found";
+                exit 1;
+            fi
 
-            dnf install -y wget m4 xz git gcc gcc-c++ make gmp-devel mpfr-devel autoconf automake libtool;
+            crb enable || true;
 
             export LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH;
             export PKG_CONFIG_PATH=/usr/local/lib/pkgconfig;
