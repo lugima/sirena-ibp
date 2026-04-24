@@ -34,12 +34,7 @@ def _generate_seeds_internal(loop_num: int, fer: bool, max_r: int, max_s: int, a
     """
 
     # Signatures
-    if loop_num == 2:
-        bf_list = [(0, 0), (1, 0), (0, 1), (1, 1)]
-    elif loop_num == 3:
-        bf_list = [(0, 0, 0), (1, 0, 0), (0, 1, 0), (0, 0, 1), (1, 1, 0), (1, 0, 1), (0, 1, 1), (1, 1, 1)]
-    else:
-        raise ValueError(f"{loop_num} sum-integrals are not yet implemented")
+    bf_list = list(itertools.product(range(1), repeat=loop_num))
 
     # Number of independent propagators at each loop order
     den_combinations = loop_num * (loop_num + 1) // 2

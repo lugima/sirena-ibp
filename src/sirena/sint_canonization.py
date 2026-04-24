@@ -1,10 +1,14 @@
 from itertools import permutations
 import logging
+from operator import itemgetter
+import time
 import numpy as np
 import itertools
 import scipy
 from collections import defaultdict
 from functools import cache
+import multiprocessing
+from functools import partial
 
 # The main and only function of this script is to compute
 # the dictionary for shifts canonizations given a DisMatrix class.
@@ -19,148 +23,162 @@ from functools import cache
 #           [1, -1]
 #       ])
 
-def compute_shifts_dictionary(DisMatrix, sig_order="normal"):
 
-    # region AUXILIARY FUNCTIONS
+# region AUXILIARY FUNCTIONS
 
-    def permute_rows(M, perm):
-        """ Permutes rows of a matrix given a permutation
+def permute_rows(M, perm):
+    """ Permutes rows of a matrix given a permutation
 
-        The permutation of n rows takes the form [i_1 i_2 ... i_n]
-        """
-        M_ = M.copy()
-        for i, p in enumerate(perm):
-            M_[i,:] = M[p,:]
-        return M_
+    The permutation of n rows takes the form [i_1 i_2 ... i_n]
+    """
+    M_ = M.copy()
+    for i, p in enumerate(perm):
+        M_[i,:] = M[p,:]
+    return M_
 
 
-    def has_solution_fast(NT, B):
-        """ Decides whether there exists solution for a system like M @ X = D @ B, where X is the unknown
-        and D=diag(d_i) is whatever diagonal matrix with d_i=+-1.
+def has_solution_fast(NT, B):
+    """ Decides whether there exists solution for a system like M @ X = D @ B, where X is the unknown
+    and D=diag(d_i) is whatever diagonal matrix with d_i=+-1.
 
-        The input is the transpose of the kernel of M (NT) and B.
+    The input is the transpose of the kernel of M (NT) and B.
 
-        It returns two outputs:
-            - Whether there exists solution or not (bool)
-            - The values d_i
-        """
+    It returns two outputs:
+        - Whether there exists solution or not (bool)
+        - The values d_i
+    """
 
-        C = np.einsum('ij,jk->ijk', NT, B)
-        C = C.transpose(0, 2, 1).reshape(-1, C.shape[1])
+    C = np.einsum('ij,jk->ijk', NT, B)
+    C = C.transpose(0, 2, 1).reshape(-1, C.shape[1])
 
-        # The vectors of NC are the possible values d_i of D=diag(d_i)
-        # such that M @ X = D @ B has solution for X
-        NC = scipy.linalg.null_space(C).T
+    # The vectors of NC are the possible values d_i of D=diag(d_i)
+    # such that M @ X = D @ B has solution for X
+    NC = scipy.linalg.null_space(C).T
 
-        # Is any +- 1 vector in NC?
-        if NC.shape[0] == 1:
-            if np.any(np.isclose(NC[0], 0.0)):
-                return (False, "")
-            else:
-                return (True, NC[0]/NC[0,0])
-        elif NC.shape[0] > 1:
-            NC_kernel = scipy.linalg.null_space(NC).T
-            for signs in itertools.product([-1,1], repeat=NC.shape[1]):
-                signs = np.array(signs)
-                if np.allclose(NC_kernel @ signs, 0):
-                    return (True, signs)
+    # Is any +- 1 vector in NC?
+    if NC.shape[0] == 1:
+        if np.any(np.isclose(NC[0], 0.0)):
             return (False, "")
         else:
-            return (False, "")
+            return (True, NC[0]/NC[0,0])
+    elif NC.shape[0] > 1:
+        NC_kernel = scipy.linalg.null_space(NC).T
+        for signs in itertools.product([-1,1], repeat=NC.shape[1]):
+            signs = np.array(signs)
+            if np.allclose(NC_kernel @ signs, 0):
+                return (True, signs)
+        return (False, "")
+    else:
+        return (False, "")
 
 
-    def find_shift(NT, PINV, B, tol=1e-12):
-        """ Finds the matrix X for which M @ X = D @ B, where
-        D=diag(d_i) is whatever diagonal matrix with d_i=+-1.
+def find_shift(NT, PINV, B, tol=1e-12):
+    """ Finds the matrix X for which M @ X = D @ B, where
+    D=diag(d_i) is whatever diagonal matrix with d_i=+-1.
 
-        The input is the transpose of the kernel of M (NT), 
-        the pseudoinverse of M (PINV) and B.
+    The input is the transpose of the kernel of M (NT), 
+    the pseudoinverse of M (PINV) and B.
 
-        It returns the value for X
-        """
+    It returns the value for X
+    """
 
-        # Check if there exists solution for some D and capture this D
-        exists_sol, diag = has_solution_fast(NT, B)
-        if not exists_sol:
-            return 
-        
-        shift = PINV @ (B * diag.reshape(-1, 1))
-        shift[np.abs(shift) < tol] = 0
-
-        return shift
-
-
-    def invert_matrix(m):
-        """ Inverts a matrix, giving zero if the matrix is singular """
-        try:
-            return np.linalg.inv(m)
-        except np.linalg.LinAlgError:
-            return np.zeros_like(m)
-
-
-    @cache # This is the heaviest function. Hence, it is cached.
-    def expand_fast(matrix, alpha):
-        """ Multinomial expansion of a matrix M raised to some powers
-        e.g.,
-        M = [
-            [1 0 0],
-            [0 1 0],
-            [1 0 -1],
-            [1 2 0]
-        ]
-
-        alpha = [1 2 3 4]
-
-        The result is the dictionary of coefficients of the polynomial in x1, x2, x3 resulting from
-        (1*x1 + 0*x2 + 0*x3)^1 * (0*x1 + 1*x2 + 0*x3)^2 * (1*x1 + 0*x2 - 1*x3)^3 * (1*x1 + 2*x2 + 0*x3)^4
-        """
-
-        M = np.array(matrix)
-        k = len(M[0])
-
-        # Initializing result
-        poly = {tuple([0]*k): 1}
-
-        for row, power in zip(M, alpha):
-
-            # Power expansion of a row (iterative)
-            part = defaultdict(int)
-            part[(0,)*k] = 1
-
-            for _ in range(power):
-                new = defaultdict(int)
-                for exp, coeff in part.items():
-                    for j, a in enumerate(row):
-                        if a == 0:
-                            continue
-                        e = list(exp)
-                        e[j] += 1
-                        new[tuple(e)] += coeff * a
-                part = new
-
-            # Multiplication of all the polynomials
-            new_poly = defaultdict(int)
-            for e1, c1 in poly.items():
-                for e2, c2 in part.items():
-                    e = tuple(a+b for a,b in zip(e1, e2))
-                    new_poly[e] += c1 * c2
-
-            poly = new_poly
-
-        return dict(poly)
+    # Check if there exists solution for some D and capture this D
+    exists_sol, diag = has_solution_fast(NT, B)
+    if not exists_sol:
+        return 
     
+    shift = PINV @ (B * diag.reshape(-1, 1))
+    shift[np.abs(shift) < tol] = 0
 
-    def get_sector(alpha):
-        """ Gives the binary representation of the sector with indices alpha """
-        return ''.join(['1' if a != 0 else '0' for a in alpha])
+    return shift
 
+
+def invert_matrix(m):
+    """ Inverts a matrix, giving zero if the matrix is singular """
+    try:
+        return np.linalg.inv(m)
+    except np.linalg.LinAlgError:
+        return np.zeros_like(m)
+
+
+@cache # This is the heaviest function. Hence, it is cached.
+def expand_fast(matrix, alpha):
+    """ Multinomial expansion of a matrix M raised to some powers
+    e.g.,
+    M = [
+        [1 0 0],
+        [0 1 0],
+        [1 0 -1],
+        [1 2 0]
+    ]
+
+    alpha = [1 2 3 4]
+
+    The result is the dictionary of coefficients of the polynomial in x1, x2, x3 resulting from
+    (1*x1 + 0*x2 + 0*x3)^1 * (0*x1 + 1*x2 + 0*x3)^2 * (1*x1 + 0*x2 - 1*x3)^3 * (1*x1 + 2*x2 + 0*x3)^4
+    """
+
+    M = np.array(matrix)
+    k = len(M[0])
+
+    # Initializing result
+    poly = {tuple([0]*k): 1}
+
+    for row, power in zip(M, alpha):
+
+        # Power expansion of a row (iterative)
+        part = defaultdict(int)
+        part[(0,)*k] = 1
+
+        for _ in range(power):
+            new = defaultdict(int)
+            for exp, coeff in part.items():
+                for j, a in enumerate(row):
+                    if a == 0:
+                        continue
+                    e = list(exp)
+                    e[j] += 1
+                    new[tuple(e)] += coeff * a
+            part = new
+
+        # Multiplication of all the polynomials
+        new_poly = defaultdict(int)
+        for e1, c1 in poly.items():
+            for e2, c2 in part.items():
+                e = tuple(a+b for a,b in zip(e1, e2))
+                new_poly[e] += c1 * c2
+
+        poly = new_poly
+
+    return dict(poly)
+
+
+def get_sector(alpha):
+    """ Gives the binary representation of the sector with indices alpha """
+    return ''.join(['1' if a != 0 else '0' for a in alpha])
+
+
+def chop_to_int(x, tol=1e-7):
+    """ Chop a number to the nearest integer """
+    r = round(x)
+    return r if abs(x - r) <= tol else x
+
+
+def process_premutation_worker(p, dis_matrix, filter_indices, N, PINV):
+    """ Worker function to process a single permutation. """
+    B = permute_rows(dis_matrix, p)
+    B = B[filter_indices]
     
-    def chop_to_int(x, tol=1e-7):
-        """ Chop a number to the nearest integer """
-        r = round(x)
-        return r if abs(x - r) <= tol else x
+    shift = find_shift(N, PINV, B)
+    
+    if shift is not None:
+        return (p, shift)  # Return both so we can unpack them later
+    return None
 
-    # endregion
+# endregion
+
+
+def compute_shifts_dictionary(DisMatrix, sig_order="normal"):
 
 
     # region CLASSES FOR SUM-INTEGRALS
@@ -294,17 +312,92 @@ def compute_shifts_dictionary(DisMatrix, sig_order="normal"):
             # All possible permutations of ALL denominators
             perms = list(permutations(range(self.Dis_matrix.shape[0])))
 
-            perms_solutions = []
-            shifts = []
-            for p in perms:
-                B = permute_rows(self.Dis_matrix, p)
-                B = B[self.filter]
+            print(len(perms))
 
-                shift = find_shift(N, PINV, B)
-                if shift is not None:
-                    perms_solutions.append(p)
-                    shifts.append(shift)
+            def mod_out_permutations(perms, filter):
+                seen = set()
+                unique_perms = []
+
+                for p in perms:
                     
+                    key = tuple(np.array(p)[filter])
+                    
+                    if key not in seen:
+                        seen.add(key)
+                        unique_perms.append(p)
+                        
+                return unique_perms
+            
+            def mod_out_permutations_ultra_fast(perms, boolean_filter):
+                # 1. Convertir la máscara booleana en índices enteros UNA SOLA VEZ
+                indices = [i for i, keep in enumerate(boolean_filter) if keep]
+
+                if len(indices) >= len(perms[0]) - 1:
+                    return perms
+                
+                seen = set()
+                seen_add = seen.add  # Localizar el método para evitar millones de búsquedas en el diccionario interno
+                unique_perms = []
+                unique_append = unique_perms.append
+                
+                # 2. Casos según la cantidad de índices a extraer
+                if len(indices) == 1:
+                    # Si solo hay un True en el filtro, itemgetter no devuelve tupla, así que lo hacemos manual
+                    idx = indices[0]
+                    for p in perms:
+                        key = p[idx]
+                        if key not in seen:
+                            seen_add(key)
+                            unique_append(p)
+                            
+                elif len(indices) > 1:
+                    # Si hay varios, itemgetter (programado en C) es la forma más rápida de extraer elementos en Python
+                    get_keys = itemgetter(*indices)
+                    for p in perms:
+                        key = get_keys(p)
+                        if key not in seen:
+                            seen_add(key)
+                            unique_append(p)
+                            
+                else:
+                    # Si el filtro son todo False (no debería pasar, pero por seguridad)
+                    return [perms[0]] if perms else []
+                    
+                return unique_perms
+
+            # ini = time.perf_counter()
+            # unique_perms = mod_out_permutations(perms, self.filter)
+            # fin = time.perf_counter()
+            # print(len(unique_perms), fin-ini)
+            ini = time.perf_counter()
+            unique_perms = mod_out_permutations_ultra_fast(perms, self.filter)
+            fin = time.perf_counter()
+            print(len(unique_perms), fin-ini)
+
+            if len(unique_perms) > 10000:
+                print("Launching parallelization...")
+                with multiprocessing.Pool() as pool:
+                    worker_func = partial(process_premutation_worker, dis_matrix=self.Dis_matrix, filter_indices=self.filter, N=N, PINV=PINV)
+                    results = pool.map(worker_func, unique_perms, chunksize=1000)
+                print("Finished")
+                perms_solutions = []
+                shifts = []
+                for result in results:
+                    if result is not None:
+                        perms_solutions.append(result[0])
+                        shifts.append(result[1])
+            else:
+                perms_solutions = []
+                shifts = []
+                for p in unique_perms:
+                    B = permute_rows(self.Dis_matrix, p)
+                    B = B[self.filter]
+
+                    shift = find_shift(N, PINV, B)
+                    if shift is not None:
+                        perms_solutions.append(p)
+                        shifts.append(shift)
+                        
             return perms_solutions, shifts
         
 
