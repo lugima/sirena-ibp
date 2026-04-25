@@ -39,7 +39,6 @@ def sirena(sints, max_r=6, max_s=6, alpha_ini=0, sig_order="normal", n_cpus=['au
     if loop_num > 2 and fer and (max_r > 6 or alpha_ini < 0):
         print_cafe()
 
-
     logging.info(" ")
     logging.info("-"*50)
     logging.info("Computing IBPs for seed sum-integrals...")

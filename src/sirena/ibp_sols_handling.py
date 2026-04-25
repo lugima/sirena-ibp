@@ -3,7 +3,7 @@ from . import global_precomputed_functions
 
 
 def solve_eq_for_sint(sint: tuple, eq: dict) -> dict:
-    """ Solves equation for a given sum-integral """
+    """ Solves equation for a given sum-integral. """
 
     coeff = -eq[sint]
     result = {i : sp.factor(sp.cancel(c / coeff)) for i, c in eq.items() if i != sint}
@@ -12,7 +12,7 @@ def solve_eq_for_sint(sint: tuple, eq: dict) -> dict:
 
 
 def solve_system_for_sint(sint: tuple, solutions: list, tag_map: dict, canon=False) -> dict:
-    """ Retrieves IBP reduction for a given sum-integral from the solved IBP system """
+    """ Retrieves IBP reduction for a given sum-integral from the solved IBP system. """
 
     if not canon:
         c_sint = global_precomputed_functions.canonize_sint(*sint)

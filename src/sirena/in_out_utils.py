@@ -5,10 +5,10 @@ import time
 import numpy as np
 import sympy as sp
 
-# region IN/OUT FUNCTIONS
+# region Read/write
 
 def sints_from_txt(file: str):
-    """ Loads sints_in (required), and optional coeffs_in and priority from a .txt file """
+    """ Loads sints_in (required), and optional coeffs_in and priority from a .txt file. """
 
     with open(file, 'r') as f:
         text = f.read()
@@ -43,7 +43,6 @@ def sints_from_txt(file: str):
     # Parse values
     if "sints_in" not in data:
         raise ValueError("A list of sum-integrals sints_in was not found in the input file.")
-
     sints_in = eval(data["sints_in"])
 
     coeffs_in = None
@@ -58,7 +57,7 @@ def sints_from_txt(file: str):
 
 
 def params_from_txt(file=None):
-    """ Load reduction parameters from a .txt file as dictionary """
+    """ Load reduction parameters from a .txt file as dictionary. """
 
     if file == None or file == "None":
         # Default parameters
@@ -85,7 +84,7 @@ def params_from_txt(file=None):
 
                 params[key] = eval(value)
 
-                
+        # Exit if params file format is incorrect
         if (
             type(params["max_r"]) != int or 
             type(params["max_s"]) != int or
@@ -110,13 +109,13 @@ def params_from_txt(file=None):
 
 
 def sints_to_txt(sints_in: list, sols: list, file: str, coeffs_in=None, to_wolfram=False):
-    """ Writes reduction result to .txt file.
+    """ Writes reduction to .txt file.
 
-    If to_wolfram=True, it parse the output as Wolfram Language
+    If to_wolfram=True, output is parsed as Wolfram Language
     """
 
     def combine_eqs(coeffs, eqs):
-        """ Combine the solutions for a linear combination of sum-integrals that the IBP system has been solved for. """
+        """ Combines the solutions for a linear combination of sum-integrals that the IBP system has been solved for. """
 
         result = {}
         for c, eq in zip(coeffs, eqs):
@@ -128,9 +127,11 @@ def sints_to_txt(sints_in: list, sols: list, file: str, coeffs_in=None, to_wolfr
 
         return {k: v for k, v in result.items() if v!=0}
 
+    def sandwich(expr: str):
+        return "{" + expr + "}"
 
     def sint_to_string(alpha: tuple, beta: tuple, sig: tuple) -> str:
-        """ Convert sum-integral index list to string. """
+        """ Converts sum-integral index list to string. """
 
         if not to_wolfram:
             alpha_string = "".join(str(a) for a in alpha)
@@ -139,8 +140,6 @@ def sints_to_txt(sints_in: list, sols: list, file: str, coeffs_in=None, to_wolfr
 
             return f"i_{alpha_string};{beta_string};{sig_string}"
         else:
-            def sandwich(expr: str):
-                return "{" + expr + "}"
             alpha_string = sandwich(",".join(str(a) for a in alpha))
             beta_string = sandwich(",".join(str(b) for b in beta))
             sig_string = sandwich(",".join(str(s) for s in sig))
@@ -149,7 +148,7 @@ def sints_to_txt(sints_in: list, sols: list, file: str, coeffs_in=None, to_wolfr
 
 
     def format_term(sint, coeff):
-        """ Format sum-integral - coefficient pairs as string. """
+        """ Formats sum-integral - coefficient pairs as string. """
         
         sint_str = sint_to_string(*sint)
         coeff_str = str(coeff)
@@ -169,7 +168,7 @@ def sints_to_txt(sints_in: list, sols: list, file: str, coeffs_in=None, to_wolfr
         f.write("=" * 60 + "\n\n")
 
         if to_wolfram:
-            # Write as replacement rules
+            # Write as Mathematica replacement rules
             f.write("sintsOut = {\n\n")
             for sint_in, sol in zip(sints_in, sols):
                 lhs = sint_to_string(*sint_in)
@@ -223,10 +222,11 @@ def sints_to_txt(sints_in: list, sols: list, file: str, coeffs_in=None, to_wolfr
 
 # endregion
 
-# region PREPARING INPUT
+
+# region Preparing input
 
 def propagator_matrix(L: int):
-    """ Generates a propagator matrix with pairwise differences at given loop order """
+    """ Generates a propagator matrix with pairwise differences at given loop order. """
 
     if L <= 1:
         raise ValueError(f"Loop order must be greater than 1. {L} was provided")
@@ -251,7 +251,7 @@ def propagator_matrix(L: int):
 
 
 def are_fermionic(sints: tuple) -> bool:
-    """ Returns a boolean indicating whether there are fermionic signatures in a list of sum-integrals """
+    """ Returns a boolean indicating whether there are fermionic signatures in a list of sum-integrals. """
 
     signatures = [sig for sint in sints for sig in sint[2]]
 
@@ -259,7 +259,7 @@ def are_fermionic(sints: tuple) -> bool:
 
 
 def get_mass_dim(sints: tuple):
-    """ Returns the mass dimensions of a list of sum-integrals """
+    """ Returns the mass dimensions of a list of sum-integrals. """
 
     loop_order = len(sints[0][2])
 
@@ -269,7 +269,7 @@ def get_mass_dim(sints: tuple):
     return mass_dims
 
 def get_most_neg_alpha(sints: tuple) -> int:
-    """ Returns the most negative denominator power of a list of sum-integrals """
+    """ Returns the most negative denominator power of a list of sum-integrals. """
 
     most_neg_alpha = min([alpha for sint in sints for alpha in sint[0]])
 
@@ -279,7 +279,7 @@ def get_most_neg_alpha(sints: tuple) -> int:
         return most_neg_alpha
     
 def get_max_r_s(sints: tuple) -> bool:
-    """ Returns the maximum propagator and numerator powers of a list of sum-integrals """
+    """ Returns the maximum propagator and numerator powers of a list of sum-integrals. """
 
     # Split denominator and numerator indices. Also unpack (and ignore) signature
     dens, nums, _ = map(list, zip(*sints))
@@ -297,7 +297,7 @@ def print_cafe():
            ) )
         ........
         |      |]
-        \      /    You should go get a coffee while SIRENA runs, it's going to take a while!
+        \      /    You should go get a coffee while SIRENA runs, it might take a while!
          `----'
     
     

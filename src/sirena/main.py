@@ -1,10 +1,11 @@
 import argparse
 import time
 import sys
-from .in_out_utils import get_max_r_s, sints_from_txt, params_from_txt, sints_to_txt
-from .reduction import sirena
 import logging
 from importlib import resources
+
+from .in_out_utils import get_max_r_s, sints_from_txt, params_from_txt, sints_to_txt
+from .reduction import sirena
 
 def args_main():
 
@@ -28,6 +29,7 @@ def args_main():
 
     return args
 
+
 def run_demo():
 
     with resources.path("sirena.examples", "fermion_test.txt") as path:
@@ -37,20 +39,19 @@ def run_demo():
 
         sints_in = sints_in[:4]
 
-        logging.info("Reducing the following two-loop fermionic sum-integrals:\n")
+        logging.info("Reducing the following 2-loop fermionic sum-integrals:\n")
         for sint in sints_in:
             logging.info(f"{sint}\n")
 
         time.sleep(1.5)
         sols = sirena(sints_in, basis_sints=priority)
 
+
 def main():
 
     args = args_main()
 
-    input_dir = args.input
-    output_dir = args.output
-    params_dir = args.params
+    input_path, output_path, params_path = args.input, args.output, args.params
     verbose = args.verbose
 
     match verbose:
@@ -61,8 +62,8 @@ def main():
         case _:
             logging.basicConfig(level=logging.DETAILED_INFO, format='%(message)s')
    
-    sints_in, coeffs_in, priority = sints_from_txt(input_dir)
-    params = params_from_txt(params_dir)
+    sints_in, coeffs_in, priority = sints_from_txt(input_path)
+    params = params_from_txt(params_path)
 
     max_r_in, max_s_in = get_max_r_s(sints_in)
     if params["max_r"] < max_r_in:
@@ -70,12 +71,11 @@ def main():
                       f"must be equal to or larger than that of the input sum-integrals ({max_r_in}).\n" +
                       f"Defaulting to max_r = {max_r_in}")
         params["max_r"] = max_r_in
-    elif params["max_s"] < max_s_in:
+    if params["max_s"] < max_s_in:
         logging.error(f"The maximum numerator power for seed generation in the parameters file ({params["max_s"]}) " +
                       f"must be equal to or larger than that of the input sum-integrals ({max_s_in}).\n" +
                       f"Defaulting to max_s = {max_s_in}")
         params["max_s"] = max_s_in
-
 
     # Reduce IBP system
     t_ini = time.time()
@@ -86,7 +86,7 @@ def main():
     print(f"\nFinished in {t_fin-t_ini:.2f} seconds\n")
     
     # Output
-    sints_to_txt(sints_in, sols, coeffs_in=coeffs_in, file=output_dir, to_wolfram=params["to_wolfram"])
+    sints_to_txt(sints_in, sols, coeffs_in=coeffs_in, file=output_path, to_wolfram=params["to_wolfram"])
 
 if __name__ == "__main__":
 

@@ -1,5 +1,5 @@
 def fill_zero_indices(sint):
-    """ Fills missing beta entries in a sum-integral with zeros """
+    """ Fills missing beta entries in a sum-integral with zeroes. """
 
     if len(sint[0]) > len(sint[1]):
         fill_zeros = len(sint[0]) - len(sint[1])
@@ -8,10 +8,10 @@ def fill_zero_indices(sint):
         
 
 def neighbor_sints(sints):
-    """ Gives a list of neighbors for a given input list of sum-integrals
+    """ Yields a list of neighbors for a given input list of sum-integrals.
 
     A neighbor of a sum-integral is another sum-integral with the same sum of propagator powers,
-    but with one propagator raised to one greater power and another raised to one more negative power
+    but with one propagator raised to one greater power and another raised to one more negative power.
     """
 
     new_sints = set()

@@ -7,7 +7,7 @@ from . import ibp_solver_num
 # region Complexity sorting
 
 def sort_sints(sints: list) -> list:
-    """ Returns sorted list of sum-integrals by Laporta's complexity criterion, most complex first """
+    """ Returns sorted list of sum-integrals by Laporta's complexity criterion, most complex first. """
 
     # Split denominator and numerator indices. Also unpack (and ignore) signature
     dens, nums, _ = map(list, zip(*sints))
@@ -27,9 +27,9 @@ def sort_sints(sints: list) -> list:
 
 
 def tag_sints(ibps: list, basis_sints = []) -> list:
-    """ Returns IBP set with sum-integrals tagged according to complexity. Also returns the tag - sum-integral mapping as dict
+    """ Returns IBP set with sum-integrals tagged according to complexity. Also returns the tag - sum-integral mapping as dict.
 
-    Lower numbers correspond to higher complexity
+    Lower numbers correspond to higher complexity.
     """
 
     # Find all different sum-integrals in IBP system
@@ -64,7 +64,7 @@ def sort_ibps(ibps: list) -> list:
     4) Third most complex sum-integral
     5) etc.
 
-    The order is reversed: least complex equations go first
+    Most complex equations are put first.
     """
 
     decorated = []
@@ -83,11 +83,12 @@ def sort_ibps(ibps: list) -> list:
 
 # endregion
 
+
 # region Numerical evaluation
 
 @njit
 def eval_poly(coeffs: list, d_val: int, p: int):
-    """ Applies Horner method for polynomial evaluation (mod p) """
+    """ Applies Horner method for polynomial evaluation (mod p). """
 
     res = 0
     # For each coefficients, from a_n to a_0
@@ -97,7 +98,7 @@ def eval_poly(coeffs: list, d_val: int, p: int):
 
 
 def eval_ibp(ibp: dict, d_val: int, p: int) -> int:
-    """ Evaluates all polynomial coefficients in IBP dictionary (mod p) """
+    """ Evaluates all polynomial coefficients in IBP dictionary (mod p). """
 
     return {sint: 
         eval_poly(tuple(reversed([int(c) for c in value])), d_val, p)
@@ -109,7 +110,7 @@ def eval_ibp(ibp: dict, d_val: int, p: int) -> int:
 # region System reduction
 
 def decouple_ibps(ibps: list) -> list:
-    """ Decouples system of IBPs in independent subsystems (not sharing variables) """
+    """ Decouples system of IBPs in independent subsystems (not sharing variables). """
 
     # Initialize: each set contains variables and positions
     sets = [{'vars': set(eq), 'rows': {i}} for i, eq in enumerate(ibps)]
@@ -147,11 +148,11 @@ def decouple_ibps(ibps: list) -> list:
 
 
 def is_redundant(row: dict, basis: list, p: int):
-    """ Determines whether a row is a linear combination of a basis of other rows in a system of equations
+    """ Determines whether a row is a linear combination of a basis of other rows in a system of equations.
         
-    The approach is numerical and employs modular arithmetics (mod p)
+    The approach is numerical and employs modular arithmetics (mod p).
 
-    Returns a boolean indicating whether the row is independent, and in such case, the row and the new pivot
+    Returns a boolean indicating whether the row is independent, and in such case, the row and the new pivot.
     """
 
     row = row.copy()
@@ -179,11 +180,11 @@ def is_redundant(row: dict, basis: list, p: int):
 
 
 def find_redundants(system: list, p: int) -> list:
-    """ Finds all linearly-dependent rows in a system of equations
+    """ Finds all linearly-dependent rows in a system of equations.
 
-    The approach is numerical and employs modular arithmetics (mod p)
+    The approach is numerical and employs modular arithmetics (mod p).
 
-    Returns list of positions of redundant rows in system
+    Returns list of positions of redundant rows in system.
     """
 
     basis = {}
@@ -203,7 +204,7 @@ def find_redundants(system: list, p: int) -> list:
 
 
 def remove_redundants(ibps: list, n_attempts: int = 3) -> list:
-    """ Removes all linearly-dependent rows in a system of equations """
+    """ Removes all linearly-dependent rows in a system of equations. """
 
     # Checks if redundant rows are the same for n_attempts different pairs of values of d and the prime modulus p
     dim_list = [random.randint(1000, 10000) for i in range(n_attempts)]
@@ -221,9 +222,9 @@ def remove_redundants(ibps: list, n_attempts: int = 3) -> list:
 
 
 def solve_system(ibps, numerical: bool = False, verbose: bool = True):
-    """ Solves IBP system, first removing linearly-dependent equations
+    """ Solves IBP system, first removing linearly-dependent equations.
 
-    If numerical = True, it solves the system for random finite field with fixed modulus
+    If numerical = True, it solves the system for random finite field with fixed modulus.
     """
 
     reduced_ibps = remove_redundants(ibps)

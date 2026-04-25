@@ -8,9 +8,9 @@ from .reduction import *
 from .seed_generation import *
 from .sint_utils import *
 from .in_out_utils import *
-# from . import main
 
 import logging
+
 DETAILED_INFO_LEVEL = 15
 logging.addLevelName(DETAILED_INFO_LEVEL, "DETAILED_INFO")
 logging.DETAILED_INFO = DETAILED_INFO_LEVEL

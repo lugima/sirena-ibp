@@ -1,15 +1,13 @@
-from itertools import permutations
-import logging
-from operator import itemgetter
-import time
 import numpy as np
 import itertools
 import scipy
-from collections import defaultdict
-from functools import cache
 import multiprocessing
-from functools import partial
+import logging
+from operator import itemgetter
+from collections import defaultdict
+from functools import cache, partial
 
+###############################################################################
 # The main and only function of this script is to compute
 # the dictionary for shifts canonizations given a DisMatrix class.
 # It returns the dictionary and the function ready to canonize any sum-integral.
@@ -22,12 +20,12 @@ from functools import partial
 #           [0, 1],
 #           [1, -1]
 #       ])
+###############################################################################
 
-
-# region AUXILIARY FUNCTIONS
+# region Auxiliary
 
 def permute_rows(M, perm):
-    """ Permutes rows of a matrix given a permutation
+    """ Permutes rows of a matrix given a permutation.
 
     The permutation of n rows takes the form [i_1 i_2 ... i_n]
     """
@@ -94,7 +92,7 @@ def find_shift(NT, PINV, B, tol=1e-12):
 
 
 def invert_matrix(m):
-    """ Inverts a matrix, giving zero if the matrix is singular """
+    """ Inverts a matrix, giving zero if the matrix is singular. """
     try:
         return np.linalg.inv(m)
     except np.linalg.LinAlgError:
@@ -103,7 +101,7 @@ def invert_matrix(m):
 
 @cache # This is the heaviest function. Hence, it is cached.
 def expand_fast(matrix, alpha):
-    """ Multinomial expansion of a matrix M raised to some powers
+    """ Multinomial expands a matrix M raised to some powers.
     e.g.,
     M = [
         [1 0 0],
@@ -154,17 +152,17 @@ def expand_fast(matrix, alpha):
 
 
 def get_sector(alpha):
-    """ Gives the binary representation of the sector with indices alpha """
+    """ Yields the binary representation of the sector with indices alpha. """
     return ''.join(['1' if a != 0 else '0' for a in alpha])
 
 
 def chop_to_int(x, tol=1e-7):
-    """ Chop a number to the nearest integer """
+    """ Chops a number to the nearest integer. """
     r = round(x)
     return r if abs(x - r) <= tol else x
 
 
-def process_premutation_worker(p, dis_matrix, filter_indices, N, PINV):
+def process_permutation_worker(p, dis_matrix, filter_indices, N, PINV):
     """ Worker function to process a single permutation. """
     B = permute_rows(dis_matrix, p)
     B = B[filter_indices]
@@ -178,10 +176,12 @@ def process_premutation_worker(p, dis_matrix, filter_indices, N, PINV):
 # endregion
 
 
-def compute_shifts_dictionary(DisMatrix, sig_order="normal"):
+def compute_shifts_dictionary(DisMatrix, sig_order="normal", n_cpus=1):
 
+    if n_cpus == 'auto':
+        n_cpus = multiprocessing.cpu_count()
 
-    # region CLASSES FOR SUM-INTEGRALS
+    # region Sum-integral classes
 
     class SumIntegralSuperSector(DisMatrix):
 
@@ -209,9 +209,12 @@ def compute_shifts_dictionary(DisMatrix, sig_order="normal"):
             self.binary_sectors.sort(reverse=True)
 
 
-        def find_physical_sectors(self, printing=True):
-            """ Finds all physical sectors and their correspondence within this supersector
-                --- Workflow ---
+        def find_physical_sectors(self):
+            """ Finds all physical sectors and their correspondence within this supersector.
+
+                Workflow
+                --------
+                
                 1. Start with the list of all binary sectors
                 2. Pick the first sector from the list
                    This list is ordered, so that when it picks one sector, it always picks the canonical one
@@ -245,7 +248,7 @@ def compute_shifts_dictionary(DisMatrix, sig_order="normal"):
                     for sector, perms in sector.perms_to_sectors.items()
                 })
                 
-                print(f"\nFound {len(sector.related_sectors)} sectors related to {sector.canonical_sector}")
+                logging.info(f"\nFound {len(sector.related_sectors)} sectors related to {sector.canonical_sector}")
 
             return self.permutations_to_canonical, self.shifts_to_canonical
         
@@ -309,40 +312,27 @@ def compute_shifts_dictionary(DisMatrix, sig_order="normal"):
             N = scipy.linalg.null_space(M.T).T
             PINV = np.linalg.pinv(M)
 
-            # All possible permutations of ALL denominators
-            perms = list(permutations(range(self.Dis_matrix.shape[0])))
+            # All possible permutations of all denominators
+            perms = list(itertools.permutations(range(self.Dis_matrix.shape[0])))
 
-            print(len(perms))
+            def mod_out_permutations(perms, boolean_filter):
+                """ Mods out permutations which only shuffle propagators that do not belong to the sector,
+                 picking one representative for each class.
+                """
 
-            def mod_out_permutations(perms, filter):
-                seen = set()
-                unique_perms = []
-
-                for p in perms:
-                    
-                    key = tuple(np.array(p)[filter])
-                    
-                    if key not in seen:
-                        seen.add(key)
-                        unique_perms.append(p)
-                        
-                return unique_perms
-            
-            def mod_out_permutations_ultra_fast(perms, boolean_filter):
-                # 1. Convertir la máscara booleana en índices enteros UNA SOLA VEZ
+                # Convert bool mask to integers
                 indices = [i for i, keep in enumerate(boolean_filter) if keep]
 
                 if len(indices) >= len(perms[0]) - 1:
                     return perms
                 
                 seen = set()
-                seen_add = seen.add  # Localizar el método para evitar millones de búsquedas en el diccionario interno
+                seen_add = seen.add  # Localize method
                 unique_perms = []
                 unique_append = unique_perms.append
                 
-                # 2. Casos según la cantidad de índices a extraer
                 if len(indices) == 1:
-                    # Si solo hay un True en el filtro, itemgetter no devuelve tupla, así que lo hacemos manual
+                    # If there is only one True in filter, itemgetter does not return tuple so we do it manually
                     idx = indices[0]
                     for p in perms:
                         key = p[idx]
@@ -351,7 +341,6 @@ def compute_shifts_dictionary(DisMatrix, sig_order="normal"):
                             unique_append(p)
                             
                 elif len(indices) > 1:
-                    # Si hay varios, itemgetter (programado en C) es la forma más rápida de extraer elementos en Python
                     get_keys = itemgetter(*indices)
                     for p in perms:
                         key = get_keys(p)
@@ -360,26 +349,22 @@ def compute_shifts_dictionary(DisMatrix, sig_order="normal"):
                             unique_append(p)
                             
                 else:
-                    # Si el filtro son todo False (no debería pasar, pero por seguridad)
+                    # If filter is full False (should not happen)
                     return [perms[0]] if perms else []
                     
                 return unique_perms
 
-            # ini = time.perf_counter()
-            # unique_perms = mod_out_permutations(perms, self.filter)
-            # fin = time.perf_counter()
-            # print(len(unique_perms), fin-ini)
-            ini = time.perf_counter()
-            unique_perms = mod_out_permutations_ultra_fast(perms, self.filter)
-            fin = time.perf_counter()
-            print(len(unique_perms), fin-ini)
+            unique_perms = mod_out_permutations(perms, self.filter)
 
-            if len(unique_perms) > 10000:
-                print("Launching parallelization...")
-                with multiprocessing.Pool() as pool:
-                    worker_func = partial(process_premutation_worker, dis_matrix=self.Dis_matrix, filter_indices=self.filter, N=N, PINV=PINV)
-                    results = pool.map(worker_func, unique_perms, chunksize=1000)
-                print("Finished")
+            paral_threshold = 10000 # Number of permutations beyond which we parallelize
+            chunksize = 1000 # Number of permutations to apply in each chunk passed to a core
+
+            # Parallelize if there are many permutations to apply
+            if n_cpus > 1 and len(unique_perms) > paral_threshold:
+                with multiprocessing.Pool(processes=n_cpus) as pool:
+                    worker_func = partial(process_permutation_worker, dis_matrix=self.Dis_matrix, filter_indices=self.filter, N=N, PINV=PINV)
+                    results = pool.map(worker_func, unique_perms, chunksize=chunksize)
+
                 perms_solutions = []
                 shifts = []
                 for result in results:
@@ -425,7 +410,7 @@ def compute_shifts_dictionary(DisMatrix, sig_order="normal"):
 
             cls.sectors = [format(i, f'0{len(cls.Dis)}b') for i in range(2**len(cls.Dis))]
 
-            # --- Compute trivially vanishing sectors ---
+            # Compute trivially vanishing sectors
             cls.vanishing_sectors = [s for s in cls.sectors if s.count('1') < cls.n_loops]
 
             for s in cls.sectors:
@@ -436,14 +421,15 @@ def compute_shifts_dictionary(DisMatrix, sig_order="normal"):
 
             cls.sectors = [s for s in cls.sectors if s not in cls.vanishing_sectors]
 
-            # --- Initializing dictionary of permutations to canonical sectors ---
+            # Initialize dictionary of permutations to canonical sectors
             cls.permutations_to_canonical = {}
             cls.shifts_to_canonical = {}
+
             logging.info(" ")
             logging.info("Finding shift symmetries...")
             for i in range(cls.n_loops, len(cls.Dis)+1):
                 
-                perms, shifts = SumIntegralSuperSector(i).find_physical_sectors(printing=True)
+                perms, shifts = SumIntegralSuperSector(i).find_physical_sectors()
                 cls.permutations_to_canonical.update(perms)
 
                 # From shifts we want the leftover matrix, that is M @ X
@@ -472,7 +458,7 @@ def compute_shifts_dictionary(DisMatrix, sig_order="normal"):
     # endregion
 
 
-    # region FUNCTION FOR CANONIZATION    
+    # region Canonization    
 
     CANONIZATION_DICT = GenericSumIntegral().shifts_to_canonical
     non_trivial_dens_positions = GenericSumIntegral().non_trivial_dens_positions
@@ -519,7 +505,7 @@ def compute_shifts_dictionary(DisMatrix, sig_order="normal"):
 
 
     def shift_signature(sig: tuple, shifted_matrix: list):
-        """ Finds loop momenta signatures after the momentum shift """
+        """ Finds loop momenta signatures after the momentum shift. """
 
         sig_np, shifted_matrix_np = np.array(sig), np.array(shifted_matrix)
         new_sig = np.linalg.solve(shifted_matrix_np[:len(sig)], sig_np)
@@ -528,7 +514,7 @@ def compute_shifts_dictionary(DisMatrix, sig_order="normal"):
 
 
     def expand_inv_props_internal(alpha, beta, sig):
-        """ Expand sum-of-loop-momenta propagators with (-1) inverse powers if the result simplifies """
+        """ Expand sum-of-loop-momenta propagators with (-1) inverse powers if the result simplifies. """
 
         sol = {(alpha, beta, sig): 1}
 
@@ -581,7 +567,7 @@ def compute_shifts_dictionary(DisMatrix, sig_order="normal"):
     @cache
     def canonize_sint_internal(alpha, beta, sig):
         """ Canonizes a sum-integral given by (alpha, beta, sig) to the canonical form (alpha_new, beta_new, sig_new) 
-        using the dictionary of shifts 
+        using the dictionary of shifts.
         """
 
         if len(beta) < len(alpha):
@@ -637,7 +623,7 @@ def compute_shifts_dictionary(DisMatrix, sig_order="normal"):
                 case _:
                     pass
         
-        # If any signature is non-zero (fermionic), prioritize the smallest one (lexicographically)
+        # If any signature is non-zero (fermionic), prioritize the smallest or largest one (lexicographically)
         if any(sig):
             signatures = [shift_signature(sig, shifted_matrix) for _, shifted_matrix in candidates]
             if sig_order == "normal":
@@ -678,7 +664,7 @@ def compute_shifts_dictionary(DisMatrix, sig_order="normal"):
     
     @cache
     def canonize_sint(alpha, beta, sig):
-        """ Canonizes a sum-integral and tries to expand inverse propagators """
+        """ Canonizes a sum-integral and tries to expand inverse propagators. """
 
         flag = True
         sol = canonize_sint_internal(alpha, beta, sig)

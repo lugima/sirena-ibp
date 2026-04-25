@@ -14,7 +14,7 @@ def generate_exponents(n: int, k: int, prefix: list = []):
 
 def pre_build_ibp_relations(n_loop: int, Dis: np.ndarray):
     """ Builds the generic (symbolic) IBP relations for a given loop order and list of denominators, 
-    and returns a function to generate them for any sum-integral as a seed 
+    and returns a function to generate them for any sum-integral as a seed. 
     """
 
     # Dis is the matrix of denominators
@@ -24,7 +24,7 @@ def pre_build_ibp_relations(n_loop: int, Dis: np.ndarray):
     composed_den = np.where(np.count_nonzero(Dis, axis=1) > 1)[0]
 
     if n_loop != len(simple_den):
-        raise ValueError("Number of loops don't coincide with number of rows with just a single 1.")
+        raise ValueError("Number of loops do not coincide with number of rows with just a single 1.")
 
     n = len(Dis)
     alpha = sp.symbols(f'a0:{n}')
@@ -131,7 +131,7 @@ def pre_build_ibp_relations(n_loop: int, Dis: np.ndarray):
 
     class Sum:
         """ Class to represent sums of LadderOperators with coefficients
-        Terms are arranged in a list [(coeff1, LadderOperator1), ...]
+        Terms are arranged in a list [(coeff1, LadderOperator1), ...].
         """
 
         def __init__(self, *args):
@@ -299,7 +299,6 @@ def pre_build_ibp_relations(n_loop: int, Dis: np.ndarray):
 
         return result
 
-
     ibp_func_list = []
     for vec in range(n_loop):
         ibp_func_list.append([])
@@ -309,7 +308,7 @@ def pre_build_ibp_relations(n_loop: int, Dis: np.ndarray):
 
 
     def build_ibp_lambdified(dmom_num: int, mom_num: int , sint: tuple, d=None) -> dict:
-        """ Generates IBP identity for a given sum-integral (keys use tuples) """
+        """ Generates IBP identity for a given sum-integral (keys use tuples). """
 
         if not d:
             d = sp.Symbol('d')  
@@ -319,9 +318,7 @@ def pre_build_ibp_relations(n_loop: int, Dis: np.ndarray):
     return build_ibp_lambdified
 
 
-
-
-
+### EXAMPLE OF USE ###
 if __name__=='__main__':
 
     Dis = np.array([
