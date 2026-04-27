@@ -80,11 +80,12 @@ def main():
     # Reduce IBP system
     t_ini = time.time()
     sols = sirena(sints_in, max_r=params["max_r"], max_s=params["max_s"], alpha_ini=params["alpha_ini"],
-                  sig_order=params["sig_order"], n_cpus=params['n_cpus'], basis_sints=priority)
+                  sig_order=params["sig_order"], n_cpus=params["n_cpus"], rerun=params["rerun"],
+                  basis_sints=priority)
     t_fin = time.time()
 
     print(f"\nFinished in {t_fin-t_ini:.2f} seconds\n")
-    
+
     # Output
     sints_to_txt(sints_in, sols, coeffs_in=coeffs_in, file=output_path, to_wolfram=params["to_wolfram"])
 

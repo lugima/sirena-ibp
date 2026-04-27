@@ -15,14 +15,14 @@ from .in_out_utils import *
 d = sp.symbols('d')
 
 
-def sirena(sints, max_r=6, max_s=6, alpha_ini=0, sig_order="normal", n_cpus=['auto',1], basis_sints=[]):
-    """ Finds the IBP reduction of an input set of sum-integrals
+def sirena(sints, max_r=6, max_s=6, alpha_ini=0, sig_order="normal", rerun=True, n_cpus=['auto',1], basis_sints=[]):
+    """ Finds the IBP reduction of an input set of sum-integrals.
     
     For seed generation, must specify: max. sum of denominator (r) and numerator powers (s). 
-    Can also specify a list of sum-integrals (basis_sints) to prioritize as masters
+    Can also specify a list of sum-integrals (basis_sints) to prioritize as masters.
 
     Can be parallelized by setting n_cpus to the number of cores to use, or 'auto' (by default) to use all available cores. 
-    n_cpus[0] are used for seed generation and n_cpus[1] are used for solving the IBP system
+    n_cpus[0] are used for seed generation and n_cpus[1] are used for solving the IBP system.
     """
 
     if len(n_cpus) != 2:
@@ -56,63 +56,69 @@ def sirena(sints, max_r=6, max_s=6, alpha_ini=0, sig_order="normal", n_cpus=['au
                 sig_order=sig_order,
                 mass_dim=mass_dim,
                 n_cpus=n_cpus[0])
-    
-    masters_count_pre, masters_count = 0, 1
-    counter = 0
+
     already_computed_ibps = []
 
-    logging.info(" ")
-    logging.info("-"*50)
-    logging.info("Reducing number of master integrals in solution...")
-    logging.info("-"*50)
-
-    # Repeat numerical solution adding neighboring seeds until number of masters stops decreasing
-    while masters_count != masters_count_pre:
-
-        counter += 1
-        masters_count_pre = masters_count
+    if rerun:
+        masters_count_pre, masters_count = 0, 1
+        counter = 0
 
         logging.info(" ")
-        logging.info("=" * 12)
-        logging.info(f"Run number {counter}")
-        logging.info("=" * 12)   
-        
-        sols, extra_info = solve_from_seeds(
-            sints, 
-            seed_input,
-            loop_num=loop_num,
-            basis_sints=basis_sints, 
-            already_computed_ibps=already_computed_ibps,
-            return_extra_info=True,
-            numerical=True,
-            n_cpus=n_cpus[1]
-            )
-        
-        # If number of generated IBPs is the same as before, its solution will not change
-        if sols is None:
-            break
-        
-        masters = set(sint for eq in sols for sint in eq)
-        masters_count = len(masters)
+        logging.info("-"*50)
+        logging.info("Reducing number of master integrals in solution...")
+        logging.info("-"*50)
 
-        logging.info(f"\n>> Found solution in terms of {masters_count} master sum-integrals <<\n\n")
+        # Repeat numerical solution adding neighboring seeds until number of masters stops decreasing
+        while masters_count != masters_count_pre:
 
-        # Save IBPs to avoid re-generating them in next iteration
-        already_computed_ibps = extra_info["ibps"]
-        seed_input_new = list(masters) + neighbor_sints(masters)
-        seed_input_new = list({fill_zero_indices(c_sint)
-                           for sint in seed_input_new 
-                           for c_sint in global_precomputed_functions.canonize_sint(*fill_zero_indices(sint))})
-        
-        # Keep only new neighboring seeds
-        seed_input = list(set(seed_input_new) - set(seed_input))
+            counter += 1
+            masters_count_pre = masters_count
+
+            logging.info(" ")
+            logging.info("=" * 12)
+            logging.info(f"Run number {counter}")
+            logging.info("=" * 12)   
+            
+            logging.info(" ")
+            logging.info("-"*50)
+            logging.info("Solving IBP system numerically...")
+            logging.info("-"*50)
+
+            sols, extra_info = solve_from_seeds(
+                sints, 
+                seed_input,
+                loop_num=loop_num,
+                basis_sints=basis_sints, 
+                already_computed_ibps=already_computed_ibps,
+                return_extra_info=True,
+                numerical=True,
+                n_cpus=n_cpus[1]
+                )
+            
+            # If number of generated IBPs is the same as before, its solution will not change
+            if sols is None:
+                break
+            
+            masters = set(sint for eq in sols for sint in eq)
+            masters_count = len(masters)
+
+            logging.info(f"\n>> Found solution in terms of {masters_count} master sum-integrals <<\n\n")
+
+            # Save IBPs to avoid re-generating them in next iteration
+            already_computed_ibps = extra_info["ibps"]
+            seed_input_new = list(masters) + neighbor_sints(masters)
+            seed_input_new = list({fill_zero_indices(c_sint)
+                            for sint in seed_input_new 
+                            for c_sint in global_precomputed_functions.canonize_sint(*fill_zero_indices(sint))})
+            
+            # Keep only new neighboring seeds
+            seed_input = list(set(seed_input_new) - set(seed_input))
 
     # Solve one last time with polynomials in d
     logging.info(" ")
     logging.info("-"*50)
     logging.info(f"Solving IBP system symbolically...")
     logging.info("-"*50)
-
 
     final_sols = solve_from_seeds(
             sints, 
@@ -141,7 +147,7 @@ def _wrapper_solve_system(decoup_ibp_w_numerical):
 
 def solve_from_seeds(sints, seeds, loop_num, already_computed_ibps=[], basis_sints=[], 
                      return_extra_info=False, numerical=False, n_cpus='auto'):
-    """ Finds the IBP reduction of an input set of sum-integrals, given a set of seeds """
+    """ Finds the IBP reduction of an input set of sum-integrals, given a set of seeds. """
 
     # Add sints to seeds and canonize
     extra_seeds = set(sints)
@@ -173,11 +179,6 @@ def solve_from_seeds(sints, seeds, loop_num, already_computed_ibps=[], basis_sin
             else:
                 return None
 
-    logging.info(" ")
-    logging.info("-"*50)
-    logging.info("Solving IBP system numerically...")
-    logging.info("-"*50)
-
     # Tag sum-integrals by complexity 
     tagged_ibps, tag_map = tag_sints(ibps, basis_sints=basis_sints)
 
@@ -199,6 +200,7 @@ def solve_from_seeds(sints, seeds, loop_num, already_computed_ibps=[], basis_sin
 
         # Sort subsystems by number of equations to optimize parallelization
         decoup_ibps = sorted(decoup_ibps, key=lambda x: len(x), reverse=True)
+        
         # Convert Flint polys to list of coefficients for pickling (so that multiprocessing can be used)
         decoup_ibps = [[{sint : tuple(int(c) for c in poly) for sint, poly in eq.items()} for eq in decoup_ibp] for decoup_ibp in decoup_ibps]
         decoup_ibps_w_numerical = [(decoup_ibp, numerical) for decoup_ibp in decoup_ibps]

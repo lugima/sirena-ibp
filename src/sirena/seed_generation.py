@@ -12,7 +12,9 @@ from . import global_precomputed_functions
 d = sp.symbols('d')
 
 def generate_betas(length, target_sum):
-    """ Generates tuples of integers with numerator powers (beta). """
+    """ Generates tuples of integers with numerator powers (beta)
+    using "stars and bars" combinatorial trick.
+    """
     
     if target_sum < 0: return
 
@@ -21,14 +23,16 @@ def generate_betas(length, target_sum):
         yield (target_sum,)
         return
     
-    # Generate combinations of integers with sum = target_sum
+    # Generate combinations of integers with sum = target_sum and length = length
     for c in itertools.combinations(range(target_sum + length - 1), length - 1):
+        # Compute numbers of stars (b-a-1) between each pair of bars (a, b) for each 
+        # combinations of betas (c) --- All different ways to arrange the betas
         yield tuple(b - a - 1 for a, b in zip((-1,) + c, c + (target_sum + length - 1,)))
 
 
 def generate_alphas(length, target_sum, alpha_ini, max_val, neg_allowance):
     """ Recursively generates tuples of integers with propagator powers (alpha).
-    'target_sum' is the sum of the tuple, and each value lies between 'alpha_ini' and 'max_val'
+    'target_sum' is the sum of the tuple, and each value lies between 'alpha_ini' and 'max_val'.
     'neg_allowance' ensures the sum of negative powers is never below 'alpha_ini'.
     """
 
@@ -77,16 +81,13 @@ def _generate_seeds_internal(loop_num: int, fer: bool, max_r: int, max_s: int, a
     loop order, max. sum of denominator (r) and numerator powers (s), most negative denominator (alpha_ini), mass dimension and signature.
     """
 
-    # Signatures
-    bf_list = list(itertools.product(range(1), repeat=loop_num))
-
     # Number of independent propagators at each loop order
     den_combinations = loop_num * (loop_num + 1) // 2
 
     # Signatures
-    bf_list = list(itertools.product(range(1), repeat=loop_num)) if fer else [(0,) * loop_num]
+    bf_list = list(itertools.product(range(2), repeat=loop_num)) if fer else [(0,) * loop_num]
 
-    # Límite superior individual para un elemento de alpha basado en tu lógica original
+    # Upper limit for individual value of alpha
     max_alpha_val = max_r - alpha_ini 
 
     filtered_seeds_list = []
@@ -133,6 +134,7 @@ def generate_seeds(loop_num: int, fer: bool, max_r: int, max_s: int, alpha_ini: 
     Mixed numerators are removed upon canonization, so seeds are returned with zero powers in them.    
     """
     
+    # Build canonization dictionary
     prop_matrix = propagator_matrix(loop_num)
     class DisMatrix:
         Dis_matrix = prop_matrix
