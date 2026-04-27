@@ -65,6 +65,10 @@ def main():
     sints_in, coeffs_in, priority = sints_from_txt(input_path)
     params = params_from_txt(params_path)
 
+    # Detect if it's a single entry: (dens, nums, sig)
+    if len(sints_in) == 3 and len(sints_in[0]) != len(sints_in[2]):
+        sints_in = (sints_in,)  # wrap into a tuple of one element
+
     max_r_in, max_s_in = get_max_r_s(sints_in)
     if params["max_r"] < max_r_in:
         logging.error(f"The maximum propagator power for seed generation in the parameters file ({params["max_r"]}) " +
