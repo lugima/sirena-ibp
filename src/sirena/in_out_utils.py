@@ -189,11 +189,12 @@ def sints_to_txt(sints_in: list, sols: list, file: str, coeffs_in=None, to_wolfr
             f.write(" LIST OF REDUCTIONS\n")
             f.write("=" * 60 + "\n\n")
 
+        last = len(sints_in) - 1
+
         if to_wolfram:
+            
             # Write as Mathematica replacement rules
             f.write("sintsOut = {\n\n")
-
-            last = len(sints_in) - 1
 
             for i, (sint_in, sol) in enumerate(zip(sints_in, sols)):
                 lhs = sint_to_string(*sint_in)
@@ -219,18 +220,31 @@ def sints_to_txt(sints_in: list, sols: list, file: str, coeffs_in=None, to_wolfr
             f.write("masters = {\n")
             f.write(masters_str)
             f.write("\n}\n\n")
+        
         else:
+
             # Write as equalities
-            for sint_in, sol in zip(sints_in, sols):
+            f.write("sints_out = [\n\n")
+
+            for i, (sint_in, sol) in enumerate(zip(sints_in, sols)):
                 lhs = sint_to_string(*sint_in)
                 terms = [format_term(sint, coeff) for sint, coeff in sol.items()]
                 rhs = " + ".join(terms)
                 
                 f.write(f"{lhs} =\n")
                 if rhs != "":
-                    f.write(f"{rhs}\n\n")
+                    if i != last:
+                        f.write(f"{rhs},\n\n")
+                    else:
+                        f.write(f"{rhs}\n\n")
                 else:
-                    f.write("0\n\n") # Vanishing results
+                    # Vanishing results
+                    if i != last:
+                        f.write("0,\n\n") 
+                    else:
+                        f.write("0\n\n")
+
+            f.write("]\n\n")
 
             # Masters
             f.write("masters = [\n")

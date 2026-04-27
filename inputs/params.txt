@@ -5,4 +5,4 @@ sig_order = "inverse"
 
 rerun = False
 n_cpus = ["auto", 1]
-to_wolfram = True
+to_wolfram = False
