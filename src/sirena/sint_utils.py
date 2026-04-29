@@ -4,6 +4,8 @@ def fill_zero_indices(sint):
     if len(sint[0]) > len(sint[1]):
         fill_zeros = len(sint[0]) - len(sint[1])
         beta = tuple( list(sint[1]) + [0] * fill_zeros)
+    else:
+        beta = sint[1]
     return (sint[0], beta, sint[2])
         
 
