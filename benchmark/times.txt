@@ -1,5 +1,5 @@
 File | Time (seconds)
 --------------------------
-sample_2loop.txt | 21.26 s
-abelian_higgs_mass.txt | 14.94 s
-abelian_fermion_3loop.txt | 905.49 s
+sample_2loop.txt | 24.34 s
+abelian_higgs_mass.txt | 13.69 s
+abelian_fermion_3loop.txt | 837.91 s

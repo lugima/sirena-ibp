@@ -1,0 +1,8 @@
+max_r = 8
+max_s = 6
+alpha_ini = -2
+sig_order = "inverse"
+
+rerun = True
+n_cpus = [20, 20]
+to_wolfram = True
