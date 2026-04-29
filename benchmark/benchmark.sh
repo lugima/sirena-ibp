@@ -15,12 +15,9 @@ for filename in "${INPUTS[@]}"; do
 
     echo -e "\n\n\nProcessing $filename... \n\n\n"
 
-    start_time=$(date +%s%N)
-    
-    sirena "$input_path" "$output_path" -p "params.txt" -vv
+    elapsed=$( (time -p sirena "$input_path" "$output_path" -p "params.txt" -vv) 2>&1 \
+            | tee /dev/stderr \
+            | awk '/real/ {print $2}' )
 
-    end_time=$(date +%s%N)
-
-    elapsed=$(echo "scale=3; ($end_time - $start_time) / 1000000000" | bc)
-    echo "$filename | $elapsed s" >> $TIME_FILE
+    echo "$filename | $elapsed s" >> "$TIME_FILE"
 done

@@ -275,9 +275,9 @@ def sints_to_txt(sints_in: list, sols: list, file: str, coeffs_in=None, to_wolfr
 
             for i, term in enumerate(terms):
                 if i == 0:
-                    f.write(f"{term}\n")
+                    f.write(f"{term} ")
                 else:
-                    f.write(f"+ {term}\n")
+                    f.write(f"+ {term}")
 
             f.write("\n")
 
