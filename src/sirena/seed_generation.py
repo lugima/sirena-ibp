@@ -64,14 +64,14 @@ def _wrapper_canonize_sint(sint: tuple) -> set:
     return set(list(global_precomputed_functions.canonize_sint(*sint)))
 
 
-def init_worker(prop_matrix):
+def init_worker(prop_matrix, sig_order, n_cpus):
     global global_precomputed_functions
     from .sint_canonization import compute_shifts_dictionary
 
     # Set the canonize and build_ibp functions for all the modules that need it
     class DisMatrix:
         Dis_matrix = prop_matrix
-    CANONIZATION_DICT, canonize_sint, cache_info = compute_shifts_dictionary(DisMatrix)
+    CANONIZATION_DICT, canonize_sint, cache_info = compute_shifts_dictionary(DisMatrix, sig_order, n_cpus)
 
     global_precomputed_functions.set_canonize_function(canonize_sint)
 
@@ -157,7 +157,7 @@ def generate_seeds(loop_num: int, fer: bool, max_r: int, max_s: int, alpha_ini: 
         c_seeds = set()
 
         if sys.version_info >= (3, 14):
-            with Pool(n_cpus, initializer=init_worker, initargs=(prop_matrix,)) as pool:
+            with Pool(n_cpus, initializer=init_worker, initargs=(prop_matrix,sig_order,n_cpus)) as pool:
                 for c_sint in pool.imap_unordered(_wrapper_canonize_sint, seeds, chunksize=1000):
                     c_seeds.update(c_sint)
         else:
@@ -167,7 +167,7 @@ def generate_seeds(loop_num: int, fer: bool, max_r: int, max_s: int, alpha_ini: 
     
     elif n_cpus == 1:
         # Canonize initial list of seeds in single core
-        init_worker(prop_matrix)
+        init_worker(prop_matrix, sig_order, n_cpus)
         c_seeds = {sint for seed_sint in seeds for sint in _wrapper_canonize_sint(seed_sint)}  
     else:
         raise ValueError(f"The number of cores (n_cpus) must be a positive integer or 'auto' (got {n_cpus})")

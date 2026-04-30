@@ -574,11 +574,11 @@ def compute_shifts_dictionary(DisMatrix, sig_order="normal", n_cpus=1):
             fill_zero_beta = [0]*(len(alpha)-len(beta))
             beta = (*beta, *fill_zero_beta)
 
-        # If the sum over zero modes is odd then this integral vanish
+        # If the sum over numerator powers is odd then this sum-integral vanishes
         if sum(beta) % 2 == 1:
             return {}
 
-        # If it is separable in one variable and one of the zero modes is odd then this integral vanish
+        # If it is separable in one variable and one of the zero modes is odd then this sum-integral vanishes
         separable_positions = is_separable(alpha)
         if any(beta[i] % 2 == 1 for i in separable_positions) and all(beta[i] == 0 for i in non_trivial_dens_positions):
             return {}

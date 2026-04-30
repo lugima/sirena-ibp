@@ -4,7 +4,7 @@ import sys
 import logging
 from importlib import resources
 
-from .in_out_utils import get_max_r_s, sints_from_txt, params_from_txt, sints_to_txt
+from .in_out_utils import color_red, get_max_r_s, sints_from_txt, params_from_txt, sints_to_txt
 from .reduction import sirena
 
 def args_main():
@@ -65,18 +65,20 @@ def main():
     sints_in, coeffs_in, priority = sints_from_txt(input_path)
     params = params_from_txt(params_path)
 
-    # Detect if it's a single entry: (dens, nums, sig)
+    # Detect if sints_in or priority it's a single entry: (dens, nums, sig)
     if len(sints_in) == 3 and len(sints_in[0]) != len(sints_in[2]):
         sints_in = (sints_in,)  # wrap into a tuple of one element
+    if len(priority) == 3 and len(priority[0]) != len(priority[2]):
+        priority = (priority,)
 
     max_r_in, max_s_in = get_max_r_s(sints_in)
     if params["max_r"] < max_r_in:
-        logging.error(f"The maximum propagator power for seed generation in the parameters file ({params["max_r"]}) " +
+        logging.error(color_red("Warning:") + f" The maximum propagator power for seed generation in the parameters file ({params["max_r"]}) " +
                       f"must be equal to or larger than that of the input sum-integrals ({max_r_in}).\n" +
                       f"Defaulting to max_r = {max_r_in}")
         params["max_r"] = max_r_in
     if params["max_s"] < max_s_in:
-        logging.error(f"The maximum numerator power for seed generation in the parameters file ({params["max_s"]}) " +
+        logging.error(color_red("Warning:") + f" The maximum numerator power for seed generation in the parameters file ({params["max_s"]}) " +
                       f"must be equal to or larger than that of the input sum-integrals ({max_s_in}).\n" +
                       f"Defaulting to max_s = {max_s_in}")
         params["max_s"] = max_s_in

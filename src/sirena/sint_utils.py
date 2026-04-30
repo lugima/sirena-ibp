@@ -31,4 +31,3 @@ def neighbor_sints(sints):
                     new_sints.add(tuple(tuple(els) for els in new_sint))
 
     return list(new_sints)
-

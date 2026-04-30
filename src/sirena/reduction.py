@@ -1,5 +1,6 @@
 from multiprocessing import Pool, cpu_count
 
+import sys
 import numpy as np
 import sympy as sp
 import flint as fl
@@ -36,6 +37,13 @@ def sirena(sints, max_r=6, max_s=6, alpha_ini=0, sig_order="normal", rerun=True,
     fer = are_fermionic(sints)
     mass_dim = get_mass_dim(sints)
 
+    # Raise warning if all sints_in have odd mass dimension (and thus vanish because the sum of beta is odd)
+    if all(dim % 2 == 1 for dim in mass_dim):
+        logging.error(color_red("Warning:") + f" sints_in only contains sum-integrals with odd mass dimension ({mass_dim}), so they all vanish.\n\n" 
+                      + "Aborting...\n")
+        sys.exit(0)
+
+    # Show coffee advice for long reductions
     if loop_num > 2 and fer and (max_r > 6 or alpha_ini < 0):
         print_cafe()
 

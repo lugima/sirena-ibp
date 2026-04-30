@@ -7,6 +7,14 @@ import sympy as sp
 
 # region Read/write
 
+def normalize_input(text: str) -> str:
+    """ Convert Mathematica-like syntax to Python tuples. """
+
+    text = text.replace("i[", "(")
+    text = text.replace("{", "(").replace("}", ")")
+    text = text.replace("]", ")")
+    return text
+
 def sints_from_txt(file: str):
     """ Loads sints_in (required), and optional coeffs_in and priority from a .txt file. """
 
@@ -43,7 +51,8 @@ def sints_from_txt(file: str):
     # Parse values
     if "sints_in" not in data:
         raise ValueError("A list of sum-integrals sints_in was not found in the input file.")
-    sints_in = eval(data["sints_in"])
+    raw_sints = normalize_input(data["sints_in"])
+    sints_in = eval(raw_sints)
 
     coeffs_in = None
     if "coeffs_in" in data:
@@ -51,7 +60,8 @@ def sints_from_txt(file: str):
 
     priority = []
     if "priority" in data:
-        priority = eval(data["priority"])
+        raw_priority = normalize_input(data["priority"])
+        priority = eval(raw_priority)
 
     return sints_in, coeffs_in, priority
 
@@ -95,7 +105,7 @@ def params_from_txt(file=None):
             not isinstance(params["n_cpus"], (list, tuple)) or
             type(params["to_wolfram"]) != bool
         ):
-            logging.error("Invalid argument types in parameter file.")
+            logging.error(color_red("Warning:") + " Invalid argument types in parameter file.")
             logging.error("\nExpected format:\n\n" +
                           "\tmax_r : int\n" +
                           "\tmax_s : int\n" +
@@ -105,7 +115,7 @@ def params_from_txt(file=None):
                           "\tn_cpus = (int|\"auto\", int|\"auto\")\n" +
                           "\tto_wolfram = bool\n")
 
-            logging.error("Aborting...")
+            logging.error("Aborting...\n")
             sys.exit(0)
 
     return params
@@ -114,7 +124,7 @@ def params_from_txt(file=None):
 def sints_to_txt(sints_in: list, sols: list, file: str, coeffs_in=None, to_wolfram=False):
     """ Writes reduction to .txt file.
 
-    If to_wolfram=True, output is parsed as Wolfram Language
+    If to_wolfram=True, output is parsed as Wolfram Language.
     """
 
     def combine_eqs(coeffs, eqs):
