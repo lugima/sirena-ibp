@@ -1,0 +1,27 @@
+// 1. Definimos el anillo (con tus parámetros a y b)
+ring r = (0, chi1, chi2), (x, y, z, t), dp;
+
+// 2. Definimos el módulo con tus 5 tuplas (vectores de 3 componentes)
+module M = 
+  [x, 0, x-z], 
+  [z, 0, z-y], 
+  [0, z, z-x], 
+  [0, y, y-z], 
+  [t+x, 0, 0],
+  [0, y+t*chi1, 0],
+  [0, 0, x+y-2z+t*chi2];
+
+// 3. Calculamos la Base de Gröbner de las tuplas
+module G = std(M);
+
+// 4. (Opcional) La Matriz de Cofactores que cambia de base
+matrix T = lift(M, G);
+
+// Imprimir los resultados
+"\n Base de Groebner del modulo:";
+G;
+
+"";
+T;
+
+matrix S = syz(M);

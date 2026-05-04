@@ -2,9 +2,9 @@ name: Build and Publish
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
-    branches: [ main ]
+    branches: [main]
 
 jobs:
   build_wheels:
@@ -19,7 +19,7 @@ jobs:
         uses: actions/checkout@main
         with:
           submodules: true
-      
+
       - name: Install FLINT (macOS)
         if: runner.os == 'macOS'
         run: brew install flint
@@ -27,7 +27,6 @@ jobs:
       - name: Build wheels
         uses: pypa/cibuildwheel@v2.21.3
         env:
-
           CIBW_PRERELEASE_PYTHONS: True
           CIBW_BUILD: "cp310-* cp311-* cp312-* cp313-* cp314-*"
           CIBW_FREE_THREADED_SUPPORT: True
@@ -70,7 +69,7 @@ jobs:
               ldconfig;
               cd ..;
             fi
-            
+
             MPFR_VER=$(pkg-config --modversion mpfr || echo "0");
             echo "Detected MPFR: $MPFR_VER";
 
@@ -97,7 +96,7 @@ jobs:
 
           CIBW_BEFORE_ALL_MACOS: brew install flint
           CIBW_ARCHS_MACOS: "x86_64 arm64"
-          
+
           CIBW_SKIP: "cp36-* cp37-* cp38-* cp39-* pp* *-manylinux_i686 *musllinux*"
           CIBW_ENVIRONMENT: CMAKE_SOURCE_DIR="src/sirena/cpp"
           CIBW_BUILD_FRONTEND: "build"
@@ -109,13 +108,16 @@ jobs:
           path: ./wheelhouse/*.whl
 
   publish:
-    name: Upload to TestPyPI
+    name: Upload to PyPI
     needs: [build_wheels]
     runs-on: ubuntu-latest
     permissions:
       id-token: write
-    
+
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
       - name: Download all wheels
         uses: actions/download-artifact@v4
         with:
@@ -123,8 +125,16 @@ jobs:
           path: dist
           merge-multiple: true
 
-      - name: Publish to TestPyPI
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
+      - name: Build sdist
+        run: |
+          pip install build
+          python -m build --sdist
+
+      - name: Publish to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
-          repository-url: https://test.pypi.org/legacy/
-          skip-existing: true

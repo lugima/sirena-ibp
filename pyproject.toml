@@ -4,7 +4,7 @@ build-backend = "scikit_build_core.build"
 
 [project]
 name = "sirena-ibp"
-version = "0.1.9"
+version = "0.0.1a1"
 description = "Sum-Integral REductioN Algorithm"
 authors = [
     { name="Luis Gil", email="lgil@ugr.es"},
