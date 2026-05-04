@@ -73,12 +73,12 @@ def main():
 
     max_r_in, max_s_in = get_max_r_s(sints_in)
     if params["max_r"] < max_r_in:
-        logging.error(color_red("Warning:") + f" The maximum propagator power for seed generation in the parameters file ({params["max_r"]}) " +
+        logging.error(color_red("Warning:") + f" The maximum propagator power for seed generation in the parameters file ({params['max_r']}) " +
                       f"must be equal to or larger than that of the input sum-integrals ({max_r_in}).\n" +
                       f"Defaulting to max_r = {max_r_in}")
         params["max_r"] = max_r_in
     if params["max_s"] < max_s_in:
-        logging.error(color_red("Warning:") + f" The maximum numerator power for seed generation in the parameters file ({params["max_s"]}) " +
+        logging.error(color_red("Warning:") + f" The maximum numerator power for seed generation in the parameters file ({params['max_s']}) " +
                       f"must be equal to or larger than that of the input sum-integrals ({max_s_in}).\n" +
                       f"Defaulting to max_s = {max_s_in}")
         params["max_s"] = max_s_in
