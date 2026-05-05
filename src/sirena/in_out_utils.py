@@ -378,3 +378,7 @@ def print_cafe():
     """
     print(cafe)
     time.sleep(3)
+
+
+def color_red(s):
+    return "\033[91m{}\033[00m".format(s)
