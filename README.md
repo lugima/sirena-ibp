@@ -39,6 +39,7 @@ A comprehensive guide to SIRENA can be found in the original publication [\[arXi
 
 - **Luis Gil** - _Universidad de Granada_
 - **Javier López Miras** - _Universidad de Granada_
+- **Adrián Moreno-Sánchez** - _Universidad de Granada_
 
 ---
 
