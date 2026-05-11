@@ -1,6 +1,6 @@
 # SIRENA &mdash; Sum-Integral REductioN Algorithm
 
-[![arXiv](https://img.shields.io/badge/arXiv-XXXX.XXXXX-00aa00.svg)](https://arxiv.org/abs/XXXX.XXXXX)
+[![arXiv](https://img.shields.io/badge/arXiv-2605.06775-00aa00.svg)](https://arxiv.org/abs/2605.06775)
 
 SIRENA is a Python package (with C++ support) for the automatic reduction of sum-integrals, the finite temperature analogs of Feynman integrals in quantum field theory.
 It finds momentum shift symmetries among sum-integrals, and exploits integration-by-parts (IBP) relations [\[arXiv:1207.4042\]](https://arxiv.org/abs/1207.4042) via the Laporta algorithm
@@ -31,7 +31,7 @@ The correct installation of the package can be tested via the shell command
 $ sirena --demo
 ```
 
-A comprehensive guide to SIRENA can be found in the original publication [\[arXiv:X\]](https://arxiv.org/abs/X). Some input examples are available in the program files, in the `inputs/` directory.
+A comprehensive guide to SIRENA can be found in the original publication [\[arXiv:2605.06775\]](https://arxiv.org/abs/2605.06775). Some input examples are available in the program files, in the `examples/` directory.
 
 ---
 
@@ -51,11 +51,10 @@ SIRENA is free software under the terms of the GNU General Public License v3.0.
 
 ## Reference
 
-If you use SIRENA please cite: [\[arXiv:X\]](https://arxiv.org/abs/X).
+If you use SIRENA please cite: [\[arXiv:2605.06775\]](https://arxiv.org/abs/2605.06775).
 
 ---
 
 ## Acknowledgments
 
-We thank Mikael Chala for sparking this project, and for his continued support during its development. We are also indebted to Pablo Navarrete for useful discussions, and to York Schröder and Philipp Schicho
-for providing useful cross-checks with their own private implementations of an IBP reduction algorithm.
+We thank Mikael Chala for sparking this project, and for his continued support during its development. We are also indebted to Pablo Navarrete for useful discussions.
