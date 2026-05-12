@@ -1,16 +1,19 @@
 import argparse
 import time
 import sys
+import os
 import logging
+import random
 from importlib import resources
 
-from .in_out_utils import color_red, get_max_r_s, sints_from_txt, params_from_txt, sints_to_txt
+from .in_out_utils import color_red, get_max_r_s, sints_from_txt, params_from_txt, sints_to_txt, welcome
 from .reduction import sirena
 
 def args_main():
 
     if '--demo' in sys.argv:
         logging.basicConfig(level=logging.DETAILED_INFO, format='%(message)s')
+        print("\nWelcome to SIRENA!\n\n")
         logging.info("\nRunning demo example...\n\n")
         run_demo()
         logging.info("\n\nDemo finished successfully!\n")
@@ -32,12 +35,13 @@ def args_main():
 
 def run_demo():
 
-    with resources.path("sirena.examples", "fermion_test.txt") as path:
+    with resources.path("sirena.examples.inputs", "sample_2loop.txt") as path:
 
         input_dir = path
         sints_in, coeffs_in, priority = sints_from_txt(input_dir)
 
-        sints_in = sints_in[:4]
+        
+        sints_in = [sints_in[random.randint(0, 80)] for _ in range(4)]
 
         logging.info("Reducing the following 2-loop fermionic sum-integrals:\n")
         for sint in sints_in:
@@ -45,6 +49,17 @@ def run_demo():
 
         time.sleep(1.5)
         sols = sirena(sints_in, basis_sints=priority)
+
+        # Output
+        file_out = resources.path("sirena.examples", "demo_output.txt")
+        sints_to_txt(sints_in, sols, file=file_out, to_wolfram=False)
+
+        print("\nShowing the result:")
+        with open(file_out, "r") as f:
+            print(f.read())
+        time.sleep(2.5)
+
+        os.remove(file_out)
 
 
 def main():
